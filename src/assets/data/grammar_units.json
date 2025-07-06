@@ -1,0 +1,378 @@
+[
+  {
+    "id": 1,
+    "title": "Unit 01: Perfect Tenses Review",
+    "description": "This unit focuses on mastering the use of perfect tenses to express completed actions and relationships between past and present events.",
+    "subtopics": [
+      {
+        "id": "1.1",
+        "title": "Present Perfect",
+        "description": "The Present Perfect connects the past to the present. It describes actions that started in the past and continue now, or actions completed at an unspecified time in the past that have a result in the present. In contrast, the Past Simple refers to actions that started and finished at a specific point in the past.",
+        "usage": "To talk about experiences ('Have you ever been to Guayaquil?'), recent actions with present relevance ('I've lost my keys, so I can't get in.'), or actions that started in the past and are still true ('She has lived in Quito since 2020.').",
+        "example": "I have eaten humitas many times.",
+        "image": "../img/presentPerfect.jpg"
+      },
+      {
+        "id": "1.2",
+        "title": "Present Perfect Continuous",
+        "description": "The Present Perfect Continuous focuses on the duration of an action that started in the past and is still ongoing or has just finished with a visible result.",
+        "usage": "To emphasize how long an activity has been happening ('I've been waiting for an hour!'), or to explain a current situation based on a recent, continuous activity ('Your eyes are red. Have you been crying?').",
+        "example": "They have been building that new apartment complex downtown for over a year now.",
+        "image": "../img/presentContinous.png"
+      },
+      {
+        "id": "1.3",
+        "title": "Past Perfect",
+        "description": "The Past Perfect is used to show that one action in the past happened before another action in the past. It establishes a clear sequence of events.",
+        "usage": "Primarily in narratives or stories to clarify the order of events when one past action preceded another. It's often used with the Past Simple.",
+        "example": "When I arrived at the bus terminal, the bus had already departed.",
+        "image": "../img/past-perfect-tense.png"
+      },
+      {
+        "id": "1.4",
+        "title": "Past Perfect Continuous",
+        "description": "The Past Perfect Continuous indicates an action that was ongoing for a period in the past and stopped just before, or was interrupted by, another past action. It emphasizes the duration of the earlier past action.",
+        "usage": "To provide background information in a story, explaining the circumstances leading up to a specific past event.",
+        "example": "She was tired because she had been working on her project all night.",
+        "image": "../img/Past-Perfect-Continuous-Tense.webp"
+      },
+      {
+        "id": "1.5",
+        "title": "Perfect Tense Errors",
+        "description": "This subtopic addresses frequent errors when using perfect tenses, such as confusing Present Perfect with Past Simple, or misplacing adverbs like 'already' and 'yet.'",
+        "usage": "In language learning and self-correction, to improve accuracy and fluency in English. Understanding common pitfalls helps reinforce correct usage.",
+        "example": "I have been to the Galapagos islands.",
+        "image": "../img/present-tense-errors.jpg"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Unit 02: Conditionals",
+    "description": "Learn how to express real, unreal, and hypothetical situations using conditional sentences accurately.",
+    "subtopics": [
+      {
+        "id": "2.1",
+        "title": "Zero Conditional",
+        "description": "The Zero Conditional describes situations where a certain condition always leads to a specific result. It's used for facts, general truths, and scientific principles. Both clauses use the Simple Present tense.",
+        "usage": "To express universal truths, natural laws, or habits that consistently occur under certain circumstances.",
+        "example": "If you freeze water, it turns into ice.",
+        "image": "../img/presentPerfect.jpg"
+      },
+      {
+        "id": "2.2",
+        "title": "First Conditional",
+        "description": "The First Conditional talks about a real and possible situation in the future and its likely outcome. The 'if' clause uses the Simple Present, and the main clause uses 'will' + base verb.",
+        "usage": "For making plans, predictions, warnings, or promises about future events that are likely to happen.",
+        "example": "If the weather is good tomorrow, we will go hiking up Pichincha.",
+        "image": "../img/presentContinous.png"
+      },
+      {
+        "id": "2.3",
+        "title": "Second Conditional",
+        "description": "The Second Conditional describes unreal or hypothetical situations in the present or future, and their imaginary consequences. The 'if' clause uses the Simple Past, and the main clause uses 'would' + base verb.",
+        "usage": "For discussing dreams, wishes, unlikely scenarios, or giving advice.",
+        "example": "If I were a millionaire, I would travel the world.",
+        "image": "../img/past-perfect-tense.png"
+      },
+      {
+        "id": "2.4",
+        "title": "Third Conditional",
+        "description": "The Third Conditional refers to unreal situations in the past and their hypothetical past consequences. It's used to talk about regrets or missed opportunities, imagining how things would have been different if something else had happened. The 'if' clause uses the Past Perfect, and the main clause uses 'would have' + past participle.",
+        "usage": "To express regret, criticize past actions, or analyze historical events differently.",
+        "example": "If you had studied harder, you would have passed the exam.",
+        "image": "../img/Past-Perfect-Continuous-Tense.webp"
+      },
+      {
+        "id": "2.5",
+        "title": "Mixed Conditionals",
+        "description": "Mixed Conditionals combine elements of different conditional types, usually the Second and Third Conditionals, to express situations where the time frame of the condition differs from the time frame of the result.",
+        "usage": "To express a present condition that affects a past result, or a past condition that affects a present result.",
+        "example": "If I were good with directions (present condition), I wouldn't have gotten lost yesterday (past result).",
+        "image": "../img/present-tense-errors.jpg"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Unit 03: Modals for Deduction and Obligation",
+    "description": "This unit dives deep into modal verbs used for expressing certainty, speculation, necessity, and obligation.",
+    "subtopics": [
+      {
+        "id": "3.1",
+        "title": "Must, Might, Could",
+        "description": "These modal verbs are used to make deductions or express degrees of certainty about present situations. Must: Strong certainty (I'm almost sure). Might/Could: Possibility (It's possible, but not certain).",
+        "usage": "When you're making logical guesses or inferences based on evidence or information you have.",
+        "example": "He's wearing a doctor's coat, so he must be a doctor. He might be a doctor, but he could also be a medical student.",
+        "image": "../img/presentPerfect.jpg"
+      },
+      {
+        "id": "3.2",
+        "title": "Must Have, Might Have, Could Have",
+        "description": "These modals are used to make deductions or express degrees of certainty about past events. Must have + past participle: Strong certainty about something that happened in the past. Might have / Could have + past participle: Possibility about something that happened in the past.",
+        "usage": "To speculate or infer about past actions or states, often when trying to explain a current situation or piece together a puzzle.",
+        "example": "Her car isn't here. She must have left already. She might have gone to the store, but she could have also gone to the gym.",
+        "image": "../img/presentContinous.png"
+      },
+      {
+        "id": "3.3",
+        "title": "Have to, Must, Should",
+        "description": "These modals express different levels of obligation, necessity, or advice. Have to: External obligation/necessity (rules, laws, external circumstances). Must: Internal obligation, strong recommendation, or prohibition (personal feeling, strong advice). Should: Advice or recommendation (It's a good idea, but not strictly required).",
+        "usage": "To give instructions, express requirements, offer suggestions, or talk about duties and responsibilities.",
+        "example": "We have to wear uniforms at school. You must finish your homework by tomorrow. You should see a doctor if you're not feeling well.",
+        "image": "../img/past-perfect-tense.png"
+      },
+      {
+        "id": "3.4",
+        "title": "Modal Verbs",
+        "description": "This subtopic combines modal verbs with the passive voice to express obligation, possibility, or deduction about an action performed on the object, where the agent is unknown or less important. The structure is modal + be + past participle.",
+        "usage": "In formal writing, reports, or when focusing on the action's result rather than the doer, while also expressing modality.",
+        "example": "The report must be submitted by Friday.",
+        "image": "../img/Past-Perfect-Continuous-Tense.webp"
+      },
+      {
+        "id": "3.5",
+        "title": "Common Confusions with Modals",
+        "description": "This addresses frequent errors and subtle distinctions between modal verbs, such as the difference between 'must not' (prohibition) and 'don't have to' (lack of obligation), or 'should' versus 'could.'",
+        "usage": "For refining accuracy in speaking and writing, ensuring the correct nuance is conveyed when using modal verbs.",
+        "example": "You must not park here.",
+        "image": "../img/present-tense-errors.jpg"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Unit 04: Passive Voice",
+    "description": "Understand and use passive structures to shift focus from the subject to the object of the sentence.",
+    "subtopics": [
+      {
+        "id": "4.1",
+        "title": "Present and Past Simple Passive",
+        "description": "These are the basic forms of the passive voice. The Present Simple Passive focuses on actions that are regularly done or facts (Form: is/are + past participle). The Past Simple Passive focuses on actions that were completed in the past (Form: was/were + past participle).",
+        "usage": "Use it when the doer of the action is unknown, unimportant, or obvious, or when the focus is on the action or the receiver of the action. Common in news, formal reports, and descriptions of processes.",
+        "example": "Coffee is grown in many regions of Ecuador. (Present Simple Passive) The new bridge was built last year. (Past Simple Passive)",
+        "image": "../img/presentPerfect.jpg"
+      },
+      {
+        "id": "4.2",
+        "title": "Present Perfect and Future Passive",
+        "description": "These extend the passive voice to other tenses. The Present Perfect Passive (Form: has/have been + past participle) is used for actions completed recently with present relevance, where the receiver is emphasized. The Future Passive (Form: will be + past participle) is used for actions that will be performed in the future.",
+        "usage": "Use the Present Perfect Passive when the completion of an action is important now. Use the Future Passive when focusing on a future completion, not the doers.",
+        "example": "The report has been finished. (Present Perfect Passive) The new building will be completed by 2026. (Future Passive)",
+        "image": "../img/presentContinous.png"
+      },
+      {
+        "id": "4.3",
+        "title": "Passive with Modals",
+        "description": "This subtopic combines modal verbs (e.g., can, must, should, might) with the passive voice. The structure is: modal + be + past participle.",
+        "usage": "Use to express possibility, necessity, permission, or advice for actions where the focus is on the object or the action itself.",
+        "example": "The instructions must be followed carefully. (Obligation) This problem can be solved easily. (Possibility)",
+        "image": "../img/past-perfect-tense.png"
+      },
+      {
+        "id": "4.4",
+        "title": "Causative Form: Have/Get something done",
+        "description": "The causative form is used when you arrange for someone else to do something for you, rather than doing it yourself. The structure is: have/get + object + past participle.",
+        "usage": "To describe services you pay for or arrange for others to perform, such as getting your hair cut, your car repaired, or your house painted.",
+        "example": "I had my hair cut yesterday. (Someone else cut my hair.) She needs to get her passport renewed. (Someone else will renew it for her.)",
+        "image": "../img/Past-Perfect-Continuous-Tense.webp"
+      },
+      {
+        "id": "4.5",
+        "title": "Passive in Reported Speech",
+        "description": "This involves converting direct speech that contains a passive structure into reported speech, adjusting tenses and pronouns as necessary.",
+        "usage": "When reporting what someone said, especially if the original statement was already in the passive voice.",
+        "example": "Direct Speech (Passive): He said, \"The car was stolen last night.\" Reported Speech (Passive): He said that the car had been stolen the previous night.",
+        "image": "../img/present-tense-errors.jpg"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Unit 05: Reported Speech and Indirect Questions",
+    "description": "Learn how to report statements, questions, and commands in indirect forms with correct tense and pronoun shifts.",
+    "subtopics": [
+      {
+        "id": "5.1",
+        "title": "Reporting Statements: Backshifting",
+        "description": "Reporting statements means relaying what someone said without using their exact words. Backshifting refers to the common rule of moving the tense of the verb 'back' one step in time (e.g., Present Simple becomes Past Simple, Past Simple becomes Past Perfect).",
+        "usage": "In narratives, news reports, conversations, and any situation where you need to summarize or convey someone else's spoken words indirectly.",
+        "example": "Direct: Maria said, \"I am studying English.\" Reported: Maria said that she was studying English.",
+        "image": "../img/presentPerfect.jpg"
+      },
+      {
+        "id": "5.2",
+        "title": "Reporting Questions: Yes/No & WH-",
+        "description": "This subtopic explains how to convert direct questions into indirect questions. For Yes/No Questions, use 'if' or 'whether' and change the word order to statement form. For WH- Questions, keep the WH- word (who, what, where, etc.) and change the word order to statement form.",
+        "usage": "When you need to ask a question more politely, or when you're reporting a question someone else asked.",
+        "example": "Direct Yes/No: He asked, \"Are you from Quito?\" Reported Yes/No: He asked if I was from Quito. Direct WH-: She asked, \"Where did you go?\" Reported WH-: She asked where I had gone.",
+        "image": "../img/presentContinous.png"
+      },
+      {
+        "id": "5.3",
+        "title": "Reporting Commands & Requests",
+        "description": "This covers how to report commands (orders) and requests (polite commands). We typically use verbs like 'tell', 'ask', 'order', 'advise', followed by an object and an infinitive (to + verb).",
+        "usage": "To convey instructions, advice, or polite requests made by someone else.",
+        "example": "Direct Command: The teacher said, \"Open your books!\" Reported Command: The teacher told us to open our books. Direct Request: She said, \"Please help me.\" Reported Request: She asked me to help her.",
+        "image": "../img/past-perfect-tense.png"
+      },
+      {
+        "id": "5.4",
+        "title": "Changes in Pronouns, Time & Place",
+        "description": "When reporting speech, it's often necessary to adjust pronouns (e.g., 'I' becomes 'he/she'), time expressions (e.g., 'tomorrow' becomes 'the next day'), and place expressions (e.g., 'here' becomes 'there') to reflect the new context of the reported speech.",
+        "usage": "These changes are crucial for grammatical correctness and clarity when transforming direct speech into reported speech.",
+        "example": "Direct: He said, \"I'll see you here tomorrow.\" Reported: He said that he would see me there the next day.",
+        "image": "../img/Past-Perfect-Continuous-Tense.webp"
+      },
+      {
+        "id": "5.5",
+        "title": "Indirect Questions in Formal English",
+        "description": "This focuses on using indirect questions in more formal contexts, often starting with introductory phrases like 'Could you tell me...', 'I wonder...', or 'Do you know...'. The word order remains that of a statement, not a question.",
+        "usage": "In formal settings, business communication, or when you want to sound more polite and less direct.",
+        "example": "Direct: \"What time is it?\" Indirect (Formal): \"Could you tell me what time it is?\" (Not \"what time is it?\")",
+        "image": "../img/present-tense-errors.jpg"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": " Unit 06: Advanced Sentence Structures",
+    "description": "TMaster complex sentence forms for academic and professional communication.",
+    "subtopics": [
+      {
+        "id": "6.1",
+        "title": "Relative Clauses",
+        "description": "The Present Perfect tense connects past actions to the present. It is used to describe experiences, recent actions, or changes over time. Form: has/have + past participle.",
+        "usage": "Use it when the specific time of the action is not important or unknown.",
+        "example": "I have visited London several times.",
+        "image": "../img/presentPerfect.jpg"
+      },
+      {
+        "id": "6.2",
+        "title": "Inversion with Negative Adverbials",
+        "description": "The Present Perfect tense connects past actions to the present. It is used to describe experiences, recent actions, or changes over time. Form: has/have + past participle.",
+        "usage": "Use it when the specific time of the action is not important or unknown.",
+        "example": "I have visited London several times.",
+        "image": "../img/presentContinous.png"
+      },
+      {
+        "id": "6.3",
+        "title": "Cleft Sentences",
+        "description": "The Present Perfect tense connects past actions to the present. It is used to describe experiences, recent actions, or changes over time. Form: has/have + past participle.",
+        "usage": "Use it when the specific time of the action is not important or unknown.",
+        "example": "I have visited London several times.",
+        "image": "../img/past-perfect-tense.png"
+      },
+      {
+        "id": "6.4",
+        "title": "Conditionals with Inversion",
+        "description": "The Present Perfect tense connects past actions to the present. It is used to describe experiences, recent actions, or changes over time. Form: has/have + past participle.",
+        "usage": "Use it when the specific time of the action is not important or unknown.",
+        "example": "I have visited London several times.",
+        "image": "../img/Past-Perfect-Continuous-Tense.webp"
+      },
+      {
+        "id": "6.5",
+        "title": "Ellipsis and Substitution",
+        "description": "The Present Perfect tense connects past actions to the present. It is used to describe experiences, recent actions, or changes over time. Form: has/have + past participle.",
+        "usage": "Use it when the specific time of the action is not important or unknown.",
+        "example": "I have visited London several times.",
+        "image": "../img/present-tense-errors.jpg"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Unit 07: Gerunds and Infinitives",
+    "description": "Deepen your understanding of verb patterns using gerunds and infinitives in complex structures.",
+    "subtopics": [
+      {
+        "id": "7.1",
+        "title": "Verb + Gerund",
+        "description": "Certain verbs are always followed by the -ing form (gerund) of another verb. This gerund acts like a noun.",
+        "usage": "After specific verbs like 'enjoy', 'finish', 'mind', 'avoid', 'suggest', 'recommend', 'admit', 'deny', etc.",
+        "example": "I enjoy reading books. She finished writing her report.",
+        "image": "../img/presentPerfect.jpg"
+      },
+      {
+        "id": "7.2",
+        "title": "Verb + Infinitive",
+        "description": "Certain verbs are always followed by the 'to + base verb' form (infinitive).",
+        "usage": "After specific verbs like 'want', 'need', 'decide', 'plan', 'hope', 'expect', 'agree', 'promise', 'learn', etc.",
+        "example": "He decided to study abroad. They hope to visit Baños soon.",
+        "image": "../img/presentContinous.png"
+      },
+      {
+        "id": "7.3",
+        "title": "Verbs that change meaning with Gerund/Infinitive",
+        "description": "Some verbs can be followed by either a gerund or an infinitive, but the choice changes the meaning of the verb. Common examples include 'stop', 'remember', 'forget', 'try', 'regret', 'need'.",
+        "usage": "To convey precise meanings, as the choice between gerund and infinitive significantly alters the message.",
+        "example": "I stopped smoking. (I no longer smoke.) I stopped to smoke. (I paused an activity in order to smoke.)",
+        "image": "../img/past-perfect-tense.png"
+      },
+      {
+        "id": "7.4",
+        "title": "Gerund as Subject/Object",
+        "description": "A gerund (the -ing form of a verb) can function as the subject of a sentence or the object of a verb or preposition.",
+        "usage": "To talk about activities as nouns, making sentences more flexible and sometimes more formal.",
+        "example": "Swimming is good exercise. (Subject) She loves dancing. (Object of verb) He's good at solving problems. (Object of preposition)",
+        "image": "../img/Past-Perfect-Continuous-Tense.webp"
+      },
+      {
+        "id": "7.5",
+        "title": "Infinitive of Purpose and Result",
+        "description": "The Infinitive of Purpose explains *why* something is done (to + verb). The Infinitive of Result explains the *outcome* or *consequence* of an action.",
+        "usage": "To provide clear reasons for actions or to describe their effects.",
+        "example": "I went to the store to buy groceries. (Purpose) He studied hard only to fail the exam. (Result)",
+        "image": "../img/present-tense-errors.jpg"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Unit 08: Advanced Tense Usage",
+    "description": "This unit focuses on mastering nuanced uses of tenses for fluent, natural English in context.",
+    "subtopics": [
+      {
+        "id": "8.1",
+        "title": "Future Perfect and Future Continuous",
+        "description": "The **Future Perfect** describes an action that will be completed by a certain time in the future (Form: will have + past participle). The **Future Continuous** describes an action that will be in progress at a specific time in the future (Form: will be + -ing).",
+        "usage": "Use Future Perfect for setting deadlines or describing accomplishments that will be finished by a future point. Use Future Continuous for discussing ongoing activities at a future moment, often for plans or predictions.",
+        "example": "By 2030, humans will have explored Mars. (Future Perfect) This time tomorrow, I will be relaxing on the beach in Esmeraldas. (Future Continuous)",
+        "image": "../img/presentPerfect.jpg"
+      },
+      {
+        "id": "8.2",
+        "title": "Present Simple for Scheduled Events",
+        "description": "Although the Present Simple usually refers to habits or facts, it can also be used to talk about future events that are part of a fixed schedule or timetable.",
+        "usage": "For public transportation schedules, movie times, class schedules, or any official future event that is set in stone.",
+        "example": "The train leaves for Guayaquil at 8:00 AM. The conference starts next Monday.",
+        "image": "../img/presentContinous.png"
+      },
+      {
+        "id": "8.3",
+        "title": "Past Simple vs. Present Perfect in Narratives",
+        "description": "This subtopic clarifies the nuanced choice between Past Simple and Present Perfect within a narrative. The **Past Simple** is used for a sequence of completed actions in the past that drive the story forward. The **Present Perfect** is used to introduce background information or experiences that are relevant to the present moment of the story, or to describe an action with a result that affects the narrative's present.",
+        "usage": "To effectively tell stories, ensuring clarity about when events happened and their relevance to the timeline.",
+        "example": "She went to the market and bought some fruit. (Past Simple - sequence of actions) She had never tasted granadilla before, so she was excited to try it. (Past Perfect - background experience relevant to her present excitement).",
+        "image": "../img/past-perfect-tense.png"
+      },
+      {
+        "id": "8.4",
+        "title": "Future in the Past",
+        "description": "Future in the Past refers to talking about something that was in the future from a past perspective. It typically uses 'would' or 'was/were going to'.",
+        "usage": "When retelling past events and you need to refer to something that was planned or expected at that earlier time, but hasn't necessarily happened yet (or might have happened and you're just reporting the past intention).",
+        "example": "I thought it would rain. (From a past perspective, rain was in the future.) He said he was going to call me later. (From his past perspective, the call was in the future.)",
+        "image": "../img/Past-Perfect-Continuous-Tense.webp"
+      },
+      {
+        "id": "8.5",
+        "title": "Tense Shifts in Paragraph Writing",
+        "description": "This involves maintaining logical and consistent tense usage throughout a paragraph or longer text. It highlights the importance of shifting tenses correctly to convey the timeline of events clearly, without confusing the reader.",
+        "usage": "Crucial for coherent and well-structured writing in essays, reports, stories, and any extended piece of text.",
+        "example": "Yesterday, I went to the park and saw many people. I enjoyed the fresh air. (Consistent past tense)",
+        "image": "../img/present-tense-errors.jpg"
+      }
+    ]
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "fontSizeOptions": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "accessibility": {
+    "talkback": false
+  }
+}
