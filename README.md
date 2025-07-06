@@ -52,4 +52,4 @@ The compiled files will be located in the dist/ directory.
 
 ## 📄 License
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0).
-See the [LICENSE](https://github.com/JexDev13/skillstage/blob/09bb8c1c779dc16ee774eb2136361e5c7d1fa71d/LICENSE) file for more information.
+See the [LICENSE](https://github.com/JexDev13/SkillStage/blob/bf7367b81efeda547c7a91ab33b68ec4357e64bc/LICENSE) file for more information.
