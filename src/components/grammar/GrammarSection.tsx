@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { ChevronRight, Lock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Check, ChevronRight, Lock } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import { grammarUnits } from '../../data(deprecated)/grammarData';
-import { GrammarTopic } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
+import { GrammarTopic, GrammarUnit } from '../../types';
 
 interface GrammarSectionProps {
   selectedTopic: GrammarTopic | null;
@@ -20,6 +19,31 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
 }) => {
   const { user } = useAuth();
   const [expandedUnit, setExpandedUnit] = useState<string>('');
+  const [grammarUnits, setGrammarUnits] = useState<GrammarUnit[]>([]);
+
+  useEffect(() => {
+    fetch('/data/grammar_units.json')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to load grammar_units.json');
+        }
+        return res.json();
+      })
+      .then((data: GrammarUnit[]) => {
+        const unitsWithIds = data.map(unit => ({
+          ...unit,
+          subtopics: unit.subtopics.map(sub => ({
+            ...sub,
+            unitId: unit.id
+          }))
+        }));
+        setGrammarUnits(unitsWithIds);
+      })
+      .catch(error => {
+        console.error('Error loading grammar units:', error);
+      });
+  }, []);
+
 
   if (selectedTopic) {
     return (
@@ -33,7 +57,7 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
             ← Back to Units
           </Button>
         </div>
-        
+
         <Card className="border-none shadow-lg">
           <CardContent className="p-8">
             <div className="flex items-center justify-between mb-6">
@@ -46,20 +70,20 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
                   UNIT {selectedTopic.unitId}
                 </p>
               </div>
-              
+
               <div className="hidden lg:block">
                 <img
-                  src="/ilusformas-06-1.png"
+                  src={selectedTopic.image}
                   alt="Grammar illustration"
                   className="w-64 h-64 object-contain"
                 />
               </div>
             </div>
 
-            <div 
-              className="prose max-w-none text-gray-700 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: selectedTopic.content }}
-            />
+            <div className="prose max-w-none text-gray-700 leading-relaxed space-y-4">
+              <p><strong>Description:</strong> {selectedTopic.description}</p>
+              <p><strong>Usage:</strong> {selectedTopic.usage}</p>
+            </div>
 
             {selectedTopic.examples.length > 0 && (
               <div className="mt-8 p-6 bg-gray-50 rounded-lg">
@@ -89,43 +113,51 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
 
       <div className="space-y-4">
         {grammarUnits.map((unit) => {
-          const isLocked = unit.isLocked && !user?.progress.completedUnits.includes(unit.id - 1);
-          
+          const isLocked = unit.subtopics.every(t => t.isLocked) &&
+            !user?.progress.completedUnits.includes(unit.id - 1);
+
           return (
             <Card key={unit.id} className="border-2 hover:border-[#1ea5b9]/30 transition-colors">
               <CardContent className="p-0">
                 <Accordion type="single" collapsible value={expandedUnit} onValueChange={setExpandedUnit}>
                   <AccordionItem value={unit.id.toString()} className="border-none">
-                    <AccordionTrigger 
+                    <AccordionTrigger
                       className={`px-6 py-4 hover:no-underline ${isLocked ? 'opacity-50' : ''}`}
                       disabled={isLocked}
                     >
                       <div className="flex items-center space-x-4">
-                        {isLocked && <Lock className="h-5 w-5 text-gray-400" />}
+                        { }
+                        {unit.isUnitCompleted ? (
+                          <Check className="h-5 w-5 text-green-500" />
+                        ) : isLocked ? (
+                          <Lock className="h-5 w-5 text-gray-400" />
+                        ) : null}
+
                         <div className="text-left">
                           <h3 className="text-lg font-semibold text-[#1ea5b9]">{unit.title}</h3>
                           <p className="text-sm text-gray-600">{unit.description}</p>
                         </div>
                       </div>
                     </AccordionTrigger>
-                    
+
                     {!isLocked && (
                       <AccordionContent className="px-6 pb-4">
                         <div className="space-y-2">
-                          {unit.topics.map((topic) => (
+                          {unit.subtopics.map((topic) => (
                             <Button
                               key={topic.id}
                               variant="ghost"
                               onClick={() => onTopicSelect(topic)}
-                              className="w-full justify-start text-left p-4 h-auto hover:bg-[#1ea5b9]/10"
+                              className="w-full justify-start text-left p-4 h-auto hover:bg-[#1ea5b9]/10 flex items-center space-x-2"
                             >
-                              <div>
-                                <h4 className="font-medium text-[#1ea5b9]">{topic.title}</h4>
-                              </div>
+                              { }
+                              {topic.isTopicCompleted && (
+                                <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                              )}
+                              <span className="font-medium text-[#1ea5b9]">{topic.title}</span>
                             </Button>
                           ))}
-                          
-                          {unit.topics.length === 0 && (
+                          {unit.subtopics.length === 0 && (
                             <p className="text-gray-500 italic py-2">No topics available yet</p>
                           )}
                         </div>

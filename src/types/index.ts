@@ -19,20 +19,24 @@ export interface ExerciseScore {
   attempts: number;
 }
 
-export interface GrammarUnit {
-  id: number;
-  title: string;
-  description: string;
-  topics: GrammarTopic[];
-  isLocked: boolean;
-}
-
 export interface GrammarTopic {
   id: string;
   title: string;
-  content: string;
+  description: string;
+  usage: string;
   examples: string[];
+  image: string;
+  isLocked: boolean;
+  isTopicCompleted: boolean;
   unitId: number;
+}
+
+export interface GrammarUnit {
+  id: number;
+  isUnitCompleted: boolean;
+  title: string;
+  description: string;
+  subtopics: GrammarTopic[];
 }
 
 export interface Exercise {
