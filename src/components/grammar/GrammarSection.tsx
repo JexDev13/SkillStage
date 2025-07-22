@@ -114,7 +114,7 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
       <div className="space-y-4">
         {grammarUnits.map((unit) => {
           const isLocked = unit.subtopics.every(t => t.isLocked) &&
-            !user?.progress.completedUnits.includes(unit.id - 1);
+            !user?.progress.completedUnits.includes(unit.id);
 
           return (
             <Card key={unit.id} className="border-2 hover:border-[#1ea5b9]/30 transition-colors">

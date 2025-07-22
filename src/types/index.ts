@@ -39,7 +39,7 @@ export interface GrammarUnit {
   subtopics: GrammarTopic[];
 }
 
-export interface Exercise {
+/*export interface Exercise {
   id: string;
   unitId: number;
   title: string;
@@ -48,7 +48,7 @@ export interface Exercise {
   type: 'multiple-choice' | 'drag-drop' | 'fill-blank' | 'matching';
   questions: Question[];
   isLocked: boolean;
-}
+}*/
 
 export interface Question {
   id: string;
@@ -68,4 +68,42 @@ export interface AuthContextType {
   register: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => void;
   updateProgress: (unitId: number, exerciseId: string, score: ExerciseScore) => void;
+}
+
+// types.ts
+export interface Game {
+  game_id: string;
+  type: string;
+  title: string;
+  instructions: string;
+  justification?: string;
+  [key: string]: any;
+}
+
+export interface Subtopic {
+  subtopic_id: string;
+  subtopic_title: string;
+  is_locked: boolean;
+  description?: string;
+  games: Game[];
+}
+
+export interface Unit {
+  unit_id: number;
+  unit_title: string;
+  isUnitCompleted: boolean;
+  subtopics: Subtopic[];
+}
+
+export interface Exercise {
+  id: string;
+  unitId: number;
+  unitTitle: string;
+  subtopicId: string;
+  subtopicTitle: string;
+  title: string;
+  instructions: string;
+  description: string;
+  questions: Game[];
+  isLocked: boolean;
 }
