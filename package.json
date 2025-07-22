@@ -9,32 +9,36 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@radix-ui/react-accordion": "^1.2.1",
+    "@radix-ui/react-avatar": "^1.1.1",
+    "@radix-ui/react-dialog": "^1.1.2",
+    "@radix-ui/react-progress": "^1.1.0",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-tabs": "^1.1.1",
+    "@radix-ui/react-toast": "^1.2.2",
     "clsx": "2.1.1",
     "lucide-react": "^0.453.0",
     "react": "^18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.8.1",
-    "tailwind-merge": "2.5.4",
-    "@radix-ui/react-progress": "^1.1.0",
-    "@radix-ui/react-separator": "^1.1.0",
-    "@radix-ui/react-dialog": "^1.1.2",
-    "@radix-ui/react-tabs": "^1.1.1",
-    "@radix-ui/react-accordion": "^1.2.1",
-    "@radix-ui/react-toast": "^1.2.2",
-    "@radix-ui/react-avatar": "^1.1.1",
     "react-hook-form": "^7.53.0",
-    "react-hot-toast": "^2.4.1"
+    "react-hot-toast": "^2.4.1",
+    "react-router-dom": "^6.8.1",
+    "tailwind-merge": "2.5.4"
   },
   "devDependencies": {
     "@types/react": "18.2.0",
+    "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-dom": "18.2.0",
     "@vitejs/plugin-react": "4.3.4",
+    "autoprefixer": "^10.4.20",
     "esbuild": "0.24.0",
     "globals": "15.12.0",
+    "postcss": "^8.4.49",
     "tailwindcss": "3.4.16",
-    "vite": "6.0.4",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49"
+    "vite": "6.0.4"
   },
   "alias": {
     "@/*": "./src/components/ui/$1"

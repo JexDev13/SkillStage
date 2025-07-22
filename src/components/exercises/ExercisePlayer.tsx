@@ -1,8 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, X, ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { Exercise } from '../../types';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+
+
+interface Game {
+  game_id: string;
+  type: string;
+  title: string;
+  instructions: string;
+  question?: string;
+  question_template?: string;
+  options?: string[];
+  correct_answer?: string;
+  answer?: string;
+  audio_file?: string;
+  sentence_to_repeat?: string;
+  audio_model_file?: string;
+  justification?: string;
+}
+
+interface Exercise {
+  id: string;
+  unitId: number;
+  unitTitle: string;
+  subtopicId: string;
+  subtopicTitle: string;
+  title: string;
+  instructions: string;
+  description: string;
+  questions: Game[];
+  isLocked: boolean;
+}
 
 interface ExercisePlayerProps {
   exercise: Exercise;
@@ -13,168 +43,103 @@ interface ExercisePlayerProps {
 export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({ exercise, onComplete, onBack }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [checked, setChecked] = useState(false);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [timer, setTimer] = useState(0);
 
-  // Estados nuevos para revisión y corrección
-  const [reviewed, setReviewed] = useState(false);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-
   const currentQuestion = exercise.questions[currentQuestionIndex];
 
-  // Drag & Drop states
-  const [dragOptions, setDragOptions] = useState<string[]>([]);
-  const [answersMap, setAnswersMap] = useState<{ [key: string]: string }>({});
-
+  // Cronómetro
   useEffect(() => {
     const interval = setInterval(() => setTimer(t => t + 1), 1000);
     return () => clearInterval(interval);
   }, []);
 
+  // Reset selección y check cuando cambia pregunta
   useEffect(() => {
     setSelectedAnswer(null);
-    setReviewed(false);
+    setChecked(false);
     setIsCorrect(null);
+  }, [currentQuestionIndex]);
 
-    if (currentQuestion.type === 'drag_and_drop') {
-      setDragOptions(currentQuestion.draggable_options || []);
-      setAnswersMap({});
-    } else {
-      setDragOptions([]);
-      setAnswersMap({});
-    }
-  }, [currentQuestionIndex, currentQuestion]);
-
+  // Formatear tiempo
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
     const s = (sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
-  // Drag & Drop handlers
-  const onDragStart = (e: React.DragEvent<HTMLDivElement>, word: string) => {
-    e.dataTransfer.setData('text/plain', word);
+  // Función para checkear respuesta en opción múltiple o listening_multiple_choice
+  const checkAnswer = () => {
+    if (!selectedAnswer) return;
+    let correctAnswer = currentQuestion.answer ?? currentQuestion.correct_answer ?? '';
+    const correct = selectedAnswer === correctAnswer;
+    setIsCorrect(correct);
+    setChecked(true);
   };
 
-  const onDrop = (e: React.DragEvent<HTMLSpanElement>, blankId: string) => {
-    e.preventDefault();
-    const draggedWord = e.dataTransfer.getData('text/plain');
-
-    if (Object.values(answersMap).includes(draggedWord)) return;
-
-    setAnswersMap(prev => ({ ...prev, [blankId]: draggedWord }));
-    setDragOptions(prev => prev.filter(w => w !== draggedWord));
+  // Función para pasar a siguiente pregunta o mostrar resultados
+  const nextQuestion = () => {
+    if (currentQuestionIndex < exercise.questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      setShowResults(true);
+    }
   };
 
-  const onDragOver = (e: React.DragEvent<HTMLSpanElement>) => {
-    e.preventDefault();
-  };
-
-  const removeAnswer = (blankId: string) => {
-    const removedWord = answersMap[blankId];
-    setAnswersMap(prev => {
-      const copy = { ...prev };
-      delete copy[blankId];
-      return copy;
-    });
-    setDragOptions(prev => [...prev, removedWord]);
-  };
-
+  // Render de contenido según tipo de pregunta
   const renderQuestionContent = () => {
     switch (currentQuestion.type) {
       case 'multiple_choice':
+      case 'listening_multiple_choice':
         return (
-          <div>
-            <p className="mb-4 font-semibold">{currentQuestion.question}</p>
-            <div className="space-y-3">
-              {currentQuestion.options.map((option: string, idx: number) => {
-                const isSelected = selectedAnswer === option;
-                return (
-                  <button
-                    key={idx}
-                    className={`w-full p-4 text-left border-2 rounded-lg transition-colors
-                    ${isSelected ? 'border-[#1ea5b9] bg-[#1ea5b9]/10 text-[#1ea5b9]' : 'border-gray-300 hover:border-[#1ea5b9] hover:bg-[#1ea5b9]/5'}`}
-                    onClick={() => !reviewed && setSelectedAnswer(option)}
-                    disabled={reviewed} // evitar cambiar respuesta tras revisar
-                  >
-                    {option}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="space-y-3">
+            {currentQuestion.options?.map((option, idx) => {
+              const isSelected = selectedAnswer === option;
+              const showCorrectness = checked;
+              const correctAnswer = currentQuestion.answer ?? currentQuestion.correct_answer ?? '';
+
+              let btnClass = 'w-full p-4 text-left border-2 rounded-lg transition-colors ';
+              if (showCorrectness) {
+                if (option === correctAnswer) {
+                  btnClass += 'border-green-500 bg-green-50 text-green-800';
+                } else if (isSelected && option !== correctAnswer) {
+                  btnClass += 'border-red-500 bg-red-50 text-red-800';
+                } else {
+                  btnClass += 'border-gray-200 bg-gray-50 text-gray-600';
+                }
+              } else if (isSelected) {
+                btnClass += 'border-[#1ea5b9] bg-[#1ea5b9]/10 text-[#1ea5b9]';
+              } else {
+                btnClass += 'border-gray-300 hover:border-[#1ea5b9] hover:bg-[#1ea5b9]/5';
+              }
+
+              return (
+                <button
+                  key={idx}
+                  className={btnClass}
+                  disabled={checked}
+                  onClick={() => !checked && setSelectedAnswer(option)}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{option}</span>
+                    {showCorrectness && option === correctAnswer && <Check className="h-5 w-5 text-green-500" />}
+                    {showCorrectness && isSelected && option !== correctAnswer && <X className="h-5 w-5 text-red-500" />}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         );
 
       case 'drag_and_drop':
+        // Simple placeholder para drag and drop
         return (
           <div>
-            <p className="mb-2 font-semibold">Build the sentence:</p>
-            <p className="mb-6 text-lg">
-              {currentQuestion.question_template.split('___').map((part: string, index: number) => {
-                if (index === currentQuestion.question_template.split('___').length - 1) {
-                  return <span key={index}>{part}</span>;
-                }
-                const blankId = currentQuestion.blanks[index]?.id || `blank-${index}`;
-                const word = answersMap[blankId];
-
-                return (
-                  <span
-                    key={blankId}
-                    onDrop={(e) => !reviewed && onDrop(e, blankId)}
-                    onDragOver={onDragOver}
-                    className="inline-block min-w-[80px] min-h-[30px] border-b-2 border-gray-400 mx-1 px-2 cursor-pointer select-none"
-                    title={word ? 'Click to remove' : 'Drop word here'}
-                    onClick={() => !reviewed && word && removeAnswer(blankId)}
-                    style={{ backgroundColor: word ? '#a0d8ef' : 'transparent' }}
-                  >
-                    {word || '\u00A0'}
-                  </span>
-                );
-              })}
-            </p>
-
-            <div className="mb-2 font-semibold">Drag these words:</div>
-            <div className="flex flex-wrap gap-3">
-              {dragOptions.map((word: string) => (
-                <div
-                  key={word}
-                  draggable={!reviewed}
-                  onDragStart={(e) => onDragStart(e, word)}
-                  className={`cursor-grab select-none rounded border border-gray-300 px-3 py-1 bg-white shadow-sm transition
-                    ${reviewed ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#1ea5b9] hover:text-white'}`}
-                >
-                  {word}
-                </div>
-              ))}
-              {dragOptions.length === 0 && <p className="text-gray-500 italic">All words placed.</p>}
-            </div>
-          </div>
-        );
-
-      case 'listening_multiple_choice':
-        return (
-          <div>
-            {currentQuestion.audio_file && (
-              <audio controls className="mb-4 w-full">
-                <source src={currentQuestion.audio_file} type="audio/mpeg" />
-                Your browser does not support the audio element.
-              </audio>
-            )}
-            <p className="mb-3">{currentQuestion.question}</p>
-            {currentQuestion.options.map((option: string, idx: number) => {
-              const isSelected = selectedAnswer === option;
-              return (
-                <button
-                  key={idx}
-                  className={`w-full p-4 text-left border-2 rounded-lg transition-colors
-                    ${isSelected ? 'border-[#1ea5b9] bg-[#1ea5b9]/10 text-[#1ea5b9]' : 'border-gray-300 hover:border-[#1ea5b9] hover:bg-[#1ea5b9]/5'}`}
-                  onClick={() => !reviewed && setSelectedAnswer(option)}
-                  disabled={reviewed}
-                >
-                  {option}
-                </button>
-              );
-            })}
+            <p className="font-semibold mb-2">Build the sentence:</p>
+            <p className="mb-4">{currentQuestion.question_template}</p>
+            <p className="italic text-gray-600">Drag & Drop UI not implemented yet.</p>
           </div>
         );
 
@@ -192,9 +157,9 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({ exercise, onComp
               className="w-full border rounded p-2"
               placeholder="Write your answer here"
               value={selectedAnswer || ''}
-              onChange={e => !reviewed && setSelectedAnswer(e.target.value)}
+              onChange={e => setSelectedAnswer(e.target.value)}
               rows={3}
-              disabled={reviewed}
+              disabled={checked}
             />
           </div>
         );
@@ -215,47 +180,6 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({ exercise, onComp
 
       default:
         return <p>Unknown question type: {currentQuestion.type}</p>;
-    }
-  };
-
-  const checkAnswer = () => {
-    let correct = false;
-    switch (currentQuestion.type) {
-      case 'multiple_choice':
-      case 'listening_multiple_choice':
-        correct = selectedAnswer === currentQuestion.correct_answer;
-        break;
-      case 'listening_writing':
-        correct = selectedAnswer?.trim().toLowerCase() === currentQuestion.correct_answer?.trim().toLowerCase();
-        break;
-      case 'drag_and_drop':
-        correct = currentQuestion.blanks.every(
-          (blank: any) => answersMap[blank.id] === blank.correct_word
-        );
-        break;
-      default:
-        correct = false;
-    }
-    setIsCorrect(correct);
-    setReviewed(true);
-  };
-
-  const resetTry = () => {
-    setReviewed(false);
-    setIsCorrect(null);
-    setSelectedAnswer(null);
-    if (currentQuestion.type === 'drag_and_drop') {
-      setDragOptions(currentQuestion.draggable_options || []);
-      setAnswersMap({});
-    }
-  };
-
-  const handleNextClick = () => {
-    resetTry();
-    if (currentQuestionIndex < exercise.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      setShowResults(true);
     }
   };
 
@@ -283,61 +207,65 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({ exercise, onComp
 
       <Card className="shadow-lg border-none">
         <CardContent>
-          <h3 className="text-xl font-semibold text-[#1ea5b9] mb-6">{currentQuestion.title}</h3>
-          <p className="mb-4 font-semibold">{currentQuestion.instructions}</p>
+          <h3 className="text-xl font-semibold text-[#1ea5b9] mb-2">{currentQuestion.title}</h3>
+          <p className="mb-6 font-semibold">{currentQuestion.instructions}</p>
+          {currentQuestion.question && <p className="mb-6">{currentQuestion.question}</p>}
 
           {renderQuestionContent()}
+
+          {checked && currentQuestion.justification && (
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-left">
+              <h4 className="font-medium text-blue-800 mb-2">Explanation:</h4>
+              <p className="text-blue-700">{currentQuestion.justification}</p>
+            </div>
+          )}
 
           <div className="mt-6 flex justify-between items-center">
             <Button
               variant="outline"
               disabled={currentQuestionIndex === 0}
-              onClick={() => {
-                resetTry();
-                setCurrentQuestionIndex(currentQuestionIndex - 1);
-              }}
+              onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
             >
               <ChevronLeft className="h-4 w-4 mr-2" />
               Previous
             </Button>
 
-            <div className="flex space-x-4">
-              {!reviewed ? (
+            <div className="flex space-x-3">
+              {!checked && (currentQuestion.type === 'multiple_choice' || currentQuestion.type === 'listening_multiple_choice') && (
                 <Button
-                  disabled={
-                    (currentQuestion.type !== 'listening_writing' && currentQuestion.type !== 'speaking_repetition')
-                      ? (!selectedAnswer && currentQuestion.type !== 'drag_and_drop')
-                      : false
-                  }
+                  disabled={!selectedAnswer}
                   onClick={checkAnswer}
+                  className="bg-[#ff852e] hover:bg-[#ff852e]/90"
+                >
+                  Check Answer
+                </Button>
+              )}
+
+              {checked && (
+                <Button
+                  onClick={nextQuestion}
                   className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90"
                 >
-                  Review Answer
+                  {currentQuestionIndex === exercise.questions.length - 1 ? 'Finish' : 'Next'}
+                  <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
-              ) : (
-                <>
-                  <div
-                    className={`flex items-center font-semibold ${
-                      isCorrect ? 'text-green-600' : 'text-red-600'
-                    }`}
-                  >
-                    {isCorrect ? 'Correct ✔' : 'Incorrect ✘'}
-                  </div>
+              )}
 
-                  {!isCorrect && (
-                    <Button onClick={resetTry} className="bg-yellow-400 hover:bg-yellow-500 text-black">
-                      Try Again
-                    </Button>
-                  )}
-
-                  <Button onClick={handleNextClick} className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90">
-                    {currentQuestionIndex === exercise.questions.length - 1 ? 'Finish' : 'Next'}
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </>
+              {/* Para tipos sin check (listening_writing, speaking_repetition), solo Next */}
+              {(currentQuestion.type === 'listening_writing' || currentQuestion.type === 'speaking_repetition') && (
+                <Button
+                  disabled={currentQuestion.type === 'listening_writing' && !selectedAnswer}
+                  onClick={nextQuestion}
+                  className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90"
+                >
+                  {currentQuestionIndex === exercise.questions.length - 1 ? 'Finish' : 'Next'}
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
               )}
             </div>
           </div>
+
+
         </CardContent>
       </Card>
     </div>

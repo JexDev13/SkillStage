@@ -9,6 +9,8 @@ import { Exercise, Unit } from '../../types';
 import { parseUnitsToExercises } from '../../utils/parseExercises';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@radix-ui/react-accordion';
 import { cn } from '../../lib/utils';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 interface ExerciseSectionProps {
   selectedExercise: Exercise | null;
@@ -29,11 +31,13 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
 
   if (selectedExercise && !showInstructions) {
     return (
-      <ExercisePlayer
-        exercise={selectedExercise}
-        onComplete={onBackToExercises}
-        onBack={() => setShowInstructions(true)}
-      />
+      <DndProvider backend={HTML5Backend}>
+        <ExercisePlayer
+          exercise={selectedExercise}
+          onComplete={onBackToExercises}
+          onBack={() => setShowInstructions(true)}
+        />
+      </DndProvider>
     );
   }
 
