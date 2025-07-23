@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Lock, Trophy, Clock, Check } from 'lucide-react';
+import { Play, Lock, Trophy, Clock, Check, Loader2  } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { ExercisePlayer } from './ExercisePlayer';
@@ -16,7 +16,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { getDocs, collection } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { GrammarSubtopic, Game } from '../../types';
-import { Loader2 } from 'lucide-react'; // Asegúrate de tener este ícono
 
 interface ExerciseSectionProps {
   selectedExercise: any;

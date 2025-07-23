@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Check, ChevronRight, Lock, Loader2 } from 'lucide-react'; // Usa el mismo loader
+import { Check, ChevronRight, Lock, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import {
@@ -78,7 +78,6 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
     fetchGrammarUnits();
   }, []);
 
-  // ✅ Loader visual, antes de renderizar nada
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
@@ -87,7 +86,6 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
     );
   }
 
-  // ✅ Detalle del tema seleccionado
   if (selectedTopic) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -146,7 +144,6 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
     );
   }
 
-  // ✅ Lista de unidades (cuando ya cargó)
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8 text-center">
