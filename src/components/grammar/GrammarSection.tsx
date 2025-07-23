@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Check, ChevronRight, Lock } from 'lucide-react';
+import { Check, ChevronRight, Lock, Loader2 } from 'lucide-react'; // Usa el mismo loader
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import {
@@ -11,10 +11,7 @@ import {
   AccordionTrigger
 } from '../ui/accordion';
 import { useAuth } from '../../contexts/AuthContext';
-import {
-  GrammarSubtopic,
-  GrammarUnit
-} from '../../types';
+import { GrammarSubtopic, GrammarUnit } from '../../types';
 
 interface GrammarSectionProps {
   selectedTopic: GrammarSubtopic | null;
@@ -30,53 +27,67 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
   const { user } = useAuth();
   const [expandedUnit, setExpandedUnit] = useState<string>('');
   const [grammarUnits, setGrammarUnits] = useState<GrammarUnit[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchGrammarUnits = async () => {
       try {
         const unitsSnapshot = await getDocs(collection(db, 'grammar_units'));
-        const unitsData: GrammarUnit[] = [];
 
-        for (const unitDoc of unitsSnapshot.docs) {
-          const unitData = unitDoc.data();
-          const subtopicsSnapshot = await getDocs(
-            collection(db, `grammar_units/${unitDoc.id}/subtopics`)
-          );
+        const unitsData: GrammarUnit[] = await Promise.all(
+          unitsSnapshot.docs.map(async (unitDoc) => {
+            const unitData = unitDoc.data();
+            const subtopicsSnapshot = await getDocs(
+              collection(db, `grammar_units/${unitDoc.id}/subtopics`)
+            );
 
-          const subtopics: GrammarSubtopic[] = subtopicsSnapshot.docs.map((subDoc) => {
-            const subData = subDoc.data();
+            const subtopics: GrammarSubtopic[] = subtopicsSnapshot.docs.map((subDoc) => {
+              const subData = subDoc.data();
+
+              return {
+                id: subDoc.id,
+                title: subData.title,
+                description: subData.description,
+                usage: subData.usage,
+                examples: subData.examples || [],
+                image: subData.image,
+                isLocked: subData.isLocked,
+                isCompleted: subData.isCompleted,
+                games: []
+              };
+            });
 
             return {
-              id: subDoc.id,
-              title: subData.title,
-              description: subData.description,
-              usage: subData.usage,
-              examples: subData.examples || [],
-              image: subData.image,
-              isLocked: subData.isLocked,
-              isCompleted: subData.isCompleted,
-              games: []
+              id: parseInt(unitDoc.id),
+              title: unitData.title,
+              description: unitData.description,
+              isUnitCompleted: unitData.isCompleted,
+              subtopics
             };
-          });
-
-          unitsData.push({
-            id: parseInt(unitDoc.id),
-            title: unitData.title,
-            description: unitData.description,
-            isUnitCompleted: unitData.isCompleted,
-            subtopics
-          });
-        }
+          })
+        );
 
         setGrammarUnits(unitsData);
       } catch (error) {
         console.error('Error loading grammar units:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchGrammarUnits();
   }, []);
 
+  // ✅ Loader visual, antes de renderizar nada
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[300px]">
+        <Loader2 className="h-10 w-10 text-[#1ea5b9] animate-spin" />
+      </div>
+    );
+  }
+
+  // ✅ Detalle del tema seleccionado
   if (selectedTopic) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -135,6 +146,7 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
     );
   }
 
+  // ✅ Lista de unidades (cuando ya cargó)
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8 text-center">
@@ -147,6 +159,7 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
           const isLocked =
             unit.subtopics.every((t) => t.isLocked) &&
             !user?.progress.completedUnits[unit.id.toString()];
+
           return (
             <Card
               key={unit.id}
@@ -161,8 +174,7 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
                 >
                   <AccordionItem value={unit.id.toString()} className="border-none">
                     <AccordionTrigger
-                      className={`px-6 py-4 hover:no-underline ${isLocked ? 'opacity-50' : ''
-                        }`}
+                      className={`px-6 py-4 hover:no-underline ${isLocked ? 'opacity-50' : ''}`}
                       disabled={isLocked}
                     >
                       <div className="flex items-center space-x-4">
@@ -173,9 +185,7 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
                         ) : null}
 
                         <div className="text-left">
-                          <h3 className="text-lg font-semibold text-[#1ea5b9]">
-                            {unit.title}
-                          </h3>
+                          <h3 className="text-lg font-semibold text-[#1ea5b9]">{unit.title}</h3>
                           <p className="text-sm text-gray-600 font-normal">{unit.description}</p>
                         </div>
                       </div>
@@ -194,25 +204,22 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
                                 }
                               }}
                               disabled={topic.isLocked}
-                              className={`w-full justify-start text-left p-4 h-auto flex items-center space-x-2 ${topic.isLocked
+                              className={`w-full justify-start text-left p-4 h-auto flex items-center space-x-2 ${
+                                topic.isLocked
                                   ? 'opacity-50 cursor-not-allowed'
                                   : 'hover:bg-[#1ea5b9]/10'
-                                }`}
+                              }`}
                             >
                               {topic.isCompleted ? (
                                 <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
                               ) : topic.isLocked ? (
                                 <Lock className="h-4 w-4 text-gray-400 flex-shrink-0" />
                               ) : null}
-                              <span className="font-medium text-[#1ea5b9]">
-                                {topic.title}
-                              </span>
+                              <span className="font-medium text-[#1ea5b9]">{topic.title}</span>
                             </Button>
                           ))}
                           {unit.subtopics.length === 0 && (
-                            <p className="text-gray-500 italic py-2">
-                              No topics available yet
-                            </p>
+                            <p className="text-gray-500 italic py-2">No topics available yet</p>
                           )}
                         </div>
                       </AccordionContent>

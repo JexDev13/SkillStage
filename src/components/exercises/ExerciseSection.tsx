@@ -16,6 +16,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { getDocs, collection } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { GrammarSubtopic, Game } from '../../types';
+import { Loader2 } from 'lucide-react'; // Asegúrate de tener este ícono
 
 interface ExerciseSectionProps {
   selectedExercise: any;
@@ -32,42 +33,68 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
   const [showInstructions, setShowInstructions] = useState(true);
   const [expandedUnit, setExpandedUnit] = useState<string>('');
   const [units, setUnits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true); // ← Loader state
 
   useEffect(() => {
     const fetchData = async () => {
-      const unitSnapshot = await getDocs(collection(db, 'grammar_units'));
-      const unitsData = await Promise.all(
-        unitSnapshot.docs.map(async (unitDoc) => {
-          const unitData = unitDoc.data();
-          const subtopicsSnapshot = await getDocs(collection(db, `grammar_units/${unitDoc.id}/subtopics`));
-          const subtopics = await Promise.all(
-            subtopicsSnapshot.docs.map(async (subDoc) => {
-              const subData = subDoc.data();
-              const gamesSnapshot = await getDocs(collection(db, `grammar_units/${unitDoc.id}/subtopics/${subDoc.id}/games`));
-              const games = gamesSnapshot.docs.map((g) => ({ ...g.data(), game_id: g.id })) as Game[]; // Asegúrate de incluir el game_id del documento
+      try {
+        const unitSnapshot = await getDocs(collection(db, 'grammar_units'));
 
-              return {
-                ...subData,
-                id: subDoc.id,
-                games,
-              } as GrammarSubtopic;
-            })
-          );
+        const unitsData = await Promise.all(
+          unitSnapshot.docs.map(async (unitDoc) => {
+            const unitData = unitDoc.data();
+            const subtopicsSnapshot = await getDocs(
+              collection(db, `grammar_units/${unitDoc.id}/subtopics`)
+            );
 
-          return {
-            id: unitDoc.id,
-            title: unitData.title,
-            description: unitData.description,
-            isUnitCompleted: unitData.isUnitCompleted,
-            subtopics,
-          };
-        })
-      );
-      setUnits(unitsData);
+            const subtopics = await Promise.all(
+              subtopicsSnapshot.docs.map(async (subDoc) => {
+                const subData = subDoc.data();
+                const gamesSnapshot = await getDocs(
+                  collection(db, `grammar_units/${unitDoc.id}/subtopics/${subDoc.id}/games`)
+                );
+
+                const games = gamesSnapshot.docs.map((g) => ({
+                  ...g.data(),
+                  game_id: g.id,
+                })) as Game[];
+
+                return {
+                  ...subData,
+                  id: subDoc.id,
+                  games,
+                } as GrammarSubtopic;
+              })
+            );
+
+            return {
+              id: unitDoc.id,
+              title: unitData.title,
+              description: unitData.description,
+              isUnitCompleted: unitData.isUnitCompleted,
+              subtopics,
+            };
+          })
+        );
+
+        setUnits(unitsData);
+      } catch (error) {
+        console.error('Error loading exercises:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchData();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[300px]">
+        <Loader2 className="h-10 w-10 text-[#1ea5b9] animate-spin" />
+      </div>
+    );
+  }
 
   if (selectedExercise && !showInstructions) {
     return (
@@ -110,19 +137,17 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                 Instructions
               </h3>
               <p className="text-gray-700 leading-relaxed">
-                {"Complete all the games in this subtopic to master the subject!"}
+                Complete all the games in this subtopic to master the subject!
               </p>
             </div>
 
-            <div className="flex flex-col items-center justify-center space-y-2">
-              <Button
-                onClick={() => setShowInstructions(false)}
-                className="bg-[#ff852e] hover:bg-[#ff852e]/90 text-white px-8 py-3 text-lg"
-              >
-                <Play className="h-5 w-5 mr-2" />
-                Start Game
-              </Button>
-            </div>
+            <Button
+              onClick={() => setShowInstructions(false)}
+              className="bg-[#ff852e] hover:bg-[#ff852e]/90 text-white px-8 py-3 text-lg"
+            >
+              <Play className="h-5 w-5 mr-2" />
+              Start Game
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -138,13 +163,10 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
 
       <div className="space-y-4">
         {units.map((unit) => {
-          const isUnitLocked = unit.subtopics.every((s: { isLocked: boolean; }) => s.isLocked);
+          const isUnitLocked = unit.subtopics.every((s: { isLocked: boolean }) => s.isLocked);
 
           return (
-            <Card
-              key={unit.id}
-              className="border-2 hover:border-[#1ea5b9]/30 transition-colors"
-            >
+            <Card key={unit.id} className="border-2 hover:border-[#1ea5b9]/30 transition-colors">
               <CardContent className="p-0">
                 <Accordion
                   type="single"
@@ -154,8 +176,7 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                 >
                   <AccordionItem value={unit.id.toString()} className="border-none">
                     <AccordionTrigger
-                      className={`px-6 py-4 hover:no-underline ${isUnitLocked ? 'opacity-50' : ''
-                        }`}
+                      className={`px-6 py-4 hover:no-underline ${isUnitLocked ? 'opacity-50' : ''}`}
                       disabled={isUnitLocked}
                     >
                       <div className="flex items-center space-x-4">
@@ -166,9 +187,7 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                         ) : null}
 
                         <div className="text-left">
-                          <h3 className="text-lg font-semibold text-[#1ea5b9]">
-                            {unit.title}
-                          </h3>
+                          <h3 className="text-lg font-semibold text-[#1ea5b9]">{unit.title}</h3>
                           <p className="text-sm text-gray-600 font-normal">{unit.description}</p>
                         </div>
                       </div>
@@ -186,17 +205,24 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                             isLocked: subtopic.isLocked,
                           };
 
-                          const isSubtopicCompleted = user?.progress?.subtopicsProgress?.[subtopic.id]?.completed;
-                          const gamesCompleted = subtopic.games.filter(game => user?.progress?.subtopicsProgress?.[subtopic.id]?.games?.[game.game_id]?.completed).length;
+                          const isSubtopicCompleted =
+                            user?.progress?.subtopicsProgress?.[subtopic.id]?.completed;
+                          const gamesCompleted = subtopic.games.filter(
+                            (game) =>
+                              user?.progress?.subtopicsProgress?.[subtopic.id]?.games?.[game.game_id]
+                                ?.completed
+                          ).length;
                           const totalGames = subtopic.games.length;
-                          const score = totalGames > 0 ? Math.round((gamesCompleted / totalGames) * 100) : undefined;
-
+                          const score =
+                            totalGames > 0
+                              ? Math.round((gamesCompleted / totalGames) * 100)
+                              : undefined;
 
                           return (
                             <Card
                               key={subtopicExercise.id}
                               className={cn(
-                                'border-2 hover:border-[#1ea5b9]/30 transition-colors',
+                                'border-2 transition-colors',
                                 subtopicExercise.isLocked
                                   ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed opacity-60'
                                   : 'hover:border-[#ff852e]'
@@ -204,16 +230,13 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <h4 className="font-semibold text-[#1ea5b9] mb-1">{subtopicExercise.title}</h4>
-                                  </div>
-
+                                  <h4 className="font-semibold text-[#1ea5b9] mb-1">
+                                    {subtopicExercise.title}
+                                  </h4>
                                   {score !== undefined && (
                                     <div className="flex items-center space-x-1 text-sm text-gray-500">
                                       <Trophy className="h-4 w-4 text-[#ff852e]" />
-                                      <span className="font-medium">
-                                        {score}%
-                                      </span>
+                                      <span className="font-medium">{score}%</span>
                                     </div>
                                   )}
                                 </div>
