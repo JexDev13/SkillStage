@@ -1,20 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Lock, Trophy, Clock, Check } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { ExercisePlayer } from './ExercisePlayer';
 import { useAuth } from '../../contexts/AuthContext';
-import unitsData from '../../../public/data/games_units.json';
-import { Exercise, Unit } from '../../types';
-import { parseUnitsToExercises } from '../../utils/parseExercises';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@radix-ui/react-accordion';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from '../ui/accordion';
 import { cn } from '../../lib/utils';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { getDocs, collection } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { GrammarSubtopic, Game } from '../../types';
 
 interface ExerciseSectionProps {
-  selectedExercise: Exercise | null;
-  onExerciseSelect: (exercise: Exercise) => void;
+  selectedExercise: any;
+  onExerciseSelect: (exercise: any) => void;
   onBackToExercises: () => void;
 }
 
@@ -26,8 +31,43 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
   const { user } = useAuth();
   const [showInstructions, setShowInstructions] = useState(true);
   const [expandedUnit, setExpandedUnit] = useState<string>('');
+  const [units, setUnits] = useState<any[]>([]);
 
-  const units: Unit[] = unitsData as Unit[];
+  useEffect(() => {
+    const fetchData = async () => {
+      const unitSnapshot = await getDocs(collection(db, 'grammar_units'));
+      const unitsData = await Promise.all(
+        unitSnapshot.docs.map(async (unitDoc) => {
+          const unitData = unitDoc.data();
+          const subtopicsSnapshot = await getDocs(collection(db, `grammar_units/${unitDoc.id}/subtopics`));
+          const subtopics = await Promise.all(
+            subtopicsSnapshot.docs.map(async (subDoc) => {
+              const subData = subDoc.data();
+              const gamesSnapshot = await getDocs(collection(db, `grammar_units/${unitDoc.id}/subtopics/${subDoc.id}/games`));
+              const games = gamesSnapshot.docs.map((g) => ({ ...g.data(), game_id: g.id })) as Game[]; // Asegúrate de incluir el game_id del documento
+
+              return {
+                ...subData,
+                id: subDoc.id,
+                games,
+              } as GrammarSubtopic;
+            })
+          );
+
+          return {
+            id: unitDoc.id,
+            title: unitData.title,
+            description: unitData.description,
+            isUnitCompleted: unitData.isUnitCompleted,
+            subtopics,
+          };
+        })
+      );
+      setUnits(unitsData);
+    };
+
+    fetchData();
+  }, []);
 
   if (selectedExercise && !showInstructions) {
     return (
@@ -69,19 +109,22 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                 <Clock className="h-5 w-5 mr-2" />
                 Instructions
               </h3>
-              <p className="text-gray-700 leading-relaxed">{selectedExercise.instructions}</p>
+              <p className="text-gray-700 leading-relaxed">
+                {"Complete all the games in this subtopic to master the subject!"}
+              </p>
             </div>
 
-            <div className="flex items-center justify-center space-x-4">
+            <div className="flex flex-col items-center justify-center space-y-2">
               <div className="text-sm text-gray-600">
-                {selectedExercise.questions.length} question
+                {selectedExercise.questions?.length || 0} game
+                {selectedExercise.questions?.length !== 1 ? 's' : ''}
               </div>
               <Button
                 onClick={() => setShowInstructions(false)}
                 className="bg-[#ff852e] hover:bg-[#ff852e]/90 text-white px-8 py-3 text-lg"
               >
                 <Play className="h-5 w-5 mr-2" />
-                Start Exercise
+                Start Game
               </Button>
             </div>
           </CardContent>
@@ -97,13 +140,15 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
         <p className="text-gray-600">Test your knowledge with interactive exercises</p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-4">
         {units.map((unit) => {
-          const unitExercises = parseUnitsToExercises([unit]);
-          const isUnitLocked = unit.subtopics.every((s) => s.is_locked);
+          const isUnitLocked = unit.subtopics.every((s: { isLocked: boolean; }) => s.isLocked);
 
           return (
-            <Card key={unit.unit_id} className="border-2 hover:border-[#1ea5b9]/30 transition-colors">
+            <Card
+              key={unit.id}
+              className="border-2 hover:border-[#1ea5b9]/30 transition-colors"
+            >
               <CardContent className="p-0">
                 <Accordion
                   type="single"
@@ -111,9 +156,10 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                   value={expandedUnit}
                   onValueChange={setExpandedUnit}
                 >
-                  <AccordionItem value={unit.unit_id.toString()} className="border-none">
+                  <AccordionItem value={unit.id.toString()} className="border-none">
                     <AccordionTrigger
-                      className={`px-6 py-4 hover:no-underline ${isUnitLocked ? 'opacity-50' : ''}`}
+                      className={`px-6 py-4 hover:no-underline ${isUnitLocked ? 'opacity-50' : ''
+                        }`}
                       disabled={isUnitLocked}
                     >
                       <div className="flex items-center space-x-4">
@@ -124,40 +170,53 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                         ) : null}
 
                         <div className="text-left">
-                          <h3 className="text-lg font-semibold text-[#1ea5b9]">{unit.unit_title}</h3>
-                          <p className="text-sm text-gray-600">{unitExercises[0].description}</p>
+                          <h3 className="text-lg font-semibold text-[#1ea5b9]">
+                            {unit.title}
+                          </h3>
+                          <p className="text-sm text-gray-600 font-normal">{unit.description}</p>
                         </div>
                       </div>
                     </AccordionTrigger>
 
                     <AccordionContent className="px-6 pb-4">
                       <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {unitExercises.map((exercise) => {
-                          const score = user?.progress.exerciseScores[exercise.id];
-                          const isLocked = exercise.isLocked;
+                        {unit.subtopics.map((subtopic: GrammarSubtopic) => {
+                          const subtopicExercise = {
+                            id: subtopic.id,
+                            title: subtopic.title,
+                            description: subtopic.description,
+                            instructions: subtopic.description,
+                            questions: subtopic.games,
+                            isLocked: subtopic.isLocked,
+                          };
+
+                          const isSubtopicCompleted = user?.progress?.subtopicsProgress?.[subtopic.id]?.completed;
+                          const gamesCompleted = subtopic.games.filter(game => user?.progress?.subtopicsProgress?.[subtopic.id]?.games?.[game.game_id]?.completed).length;
+                          const totalGames = subtopic.games.length;
+                          const score = totalGames > 0 ? Math.round((gamesCompleted / totalGames) * 100) : undefined;
+
 
                           return (
                             <Card
-                              key={exercise.id}
+                              key={subtopicExercise.id}
                               className={cn(
-                                "border transition-colors flex flex-col justify-between h-auto",
-                                isLocked
-                                  ? "bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed opacity-60"
-                                  : "hover:border-[#ff852e]"
+                                'border-2 hover:border-[#1ea5b9]/30 transition-colors',
+                                subtopicExercise.isLocked
+                                  ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed opacity-60'
+                                  : 'hover:border-[#ff852e]'
                               )}
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1">
-                                    <h4 className="font-semibold text-[#1ea5b9] mb-1">{exercise.title}</h4>
-                                    <p className="text-xs text-gray-500 mb-2">{exercise.description}</p>
+                                    <h4 className="font-semibold text-[#1ea5b9] mb-1">{subtopicExercise.title}</h4>
                                   </div>
 
-                                  {score && (
+                                  {score !== undefined && (
                                     <div className="flex items-center space-x-1 text-sm text-gray-500">
                                       <Trophy className="h-4 w-4 text-[#ff852e]" />
                                       <span className="font-medium">
-                                        {Math.round((score.score / score.totalQuestions) * 100)}%
+                                        {score}%
                                       </span>
                                     </div>
                                   )}
@@ -165,25 +224,27 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
 
                                 <div className="flex items-center justify-between mt-2">
                                   <span className="text-sm text-gray-500">
-                                    {exercise.questions.length} question
-                                    {exercise.questions.length !== 1 ? 's' : ''}
+                                    {subtopicExercise.questions.length} game
+                                    {subtopicExercise.questions.length !== 1 ? 's' : ''}
                                   </span>
 
-                                  {exercise.isLocked ? (
+                                  {subtopicExercise.isLocked ? (
                                     <Lock className="h-5 w-5 text-gray-400" />
                                   ) : (
                                     <Play className="h-5 w-5 text-[#ff852e]" />
                                   )}
                                 </div>
 
-                                {!exercise.isLocked && (
+                                {!subtopicExercise.isLocked && (
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     className="w-full mt-4 border-[#ff852e] text-[#ff852e] hover:bg-[#ff852e] hover:text-white"
-                                    onClick={() => onExerciseSelect(exercise)}
+                                    onClick={() => {
+                                      onExerciseSelect(subtopic);
+                                    }}
                                   >
-                                    {score ? 'Practice Again' : 'Start Exercise'}
+                                    {isSubtopicCompleted ? 'Practice Again' : 'Start Game'}
                                   </Button>
                                 )}
                               </CardContent>
