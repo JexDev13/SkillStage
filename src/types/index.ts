@@ -67,7 +67,6 @@ export interface Game {
   incorrect_feedback?: string;
   image_url?: string;
 
-  question_template: string;
   blanks: { id: string; correct_answer: string }[];
   draggable_options: string[];
 
@@ -86,7 +85,6 @@ export type GameType =
   | "listening_multiple_choice"
   | "listening_writing"
   | "speaking_repetition";
-
 
 // =====================
 // ✅ Auth Context Type

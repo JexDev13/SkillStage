@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { ArrowLeft, ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
-import { DropResult } from 'react-beautiful-dnd';
 import { Game } from '../../types';
 import { Progress } from '../ui/progress';
 import toast from 'react-hot-toast';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 interface ExercisePlayerProps {
   exercise: {
@@ -36,7 +36,6 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
   }
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  // `questionsState` ahora maneja el estado de cada pregunta, incluyendo userAnswer, isChecked, isCorrect
   const [questionsState, setQuestionsState] = useState<QuestionState[]>(
     exercise.games.map(game => ({
       ...game,
@@ -104,9 +103,6 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
       return;
     }
 
-    // No se guarda el progreso aquí directamente en un contexto externo.
-    // La lógica de guardado de progreso podría ser llamada en `onComplete` al finalizar el ejercicio.
-
     if (currentQuestionIndex === questionsState.length - 1) {
       setShowResults(true);
     } else {
@@ -121,8 +117,33 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
   };
 
   const handleDragEnd = (result: DropResult) => {
-    // To be implemented for drag and drop
+    if (!result.destination) return;
+
+    const source = result.source;
+    const destination = result.destination;
+
+    // Solo permitir mover de "options" a un "blank-*"
+    if (source.droppableId === 'options' && destination.droppableId.startsWith('blank-')) {
+      const blankId = destination.droppableId.replace('blank-', '');
+      const draggedItem = currentQuestion.draggable_options[source.index];
+
+      const updatedUserAnswer = currentQuestion.userAnswer
+        ? JSON.parse(currentQuestion.userAnswer)
+        : {};
+
+      updatedUserAnswer[blankId] = draggedItem;
+
+      const updatedQuestion: QuestionState = {
+        ...currentQuestion,
+        userAnswer: JSON.stringify(updatedUserAnswer)
+      };
+
+      const updatedQuestionsState = [...questionsState];
+      updatedQuestionsState[currentQuestionIndex] = updatedQuestion;
+      setQuestionsState(updatedQuestionsState);
+    }
   };
+
 
   const renderQuestionContent = () => {
     switch (currentQuestion.type) {
@@ -183,12 +204,70 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
         );
 
       case 'drag_and_drop':
+        if (!currentQuestion.question) {
+          return <p className="text-red-600">Missing question template for this drag-and-drop exercise.</p>;
+        }
+
+        const filledTemplate = currentQuestion.question.split(/(\[\[.*?\]\])/g).map((part, i) => {
+          const match = part.match(/\[\[(.*?)\]\]/);
+          if (match) {
+            const blankId = match[1];
+            const userAnswer = currentQuestion.userAnswer ? JSON.parse(currentQuestion.userAnswer)[blankId] : '';
+            return (
+              <Droppable droppableId={`blank-${blankId}`} direction="horizontal" key={i}>
+                {(provided, snapshot) => (
+                  <span
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="inline-block min-w-[80px] border-b-2 border-gray-400 mx-1 px-2 py-1 text-center bg-white"
+                  >
+                    {userAnswer || '____'}
+                    {provided.placeholder}
+                  </span>
+                )}
+              </Droppable>
+            );
+          } else {
+            return <span key={i}>{part}</span>;
+          }
+        });
+
         return (
           <div>
-            <p className="italic text-sm mb-2">Drag the options to the correct spots.</p>
-            {/* Drag & Drop component goes here */}
+            <p className="italic text-sm mb-4">Drag the options to the correct blanks.</p>
+            <p className="mb-4">{filledTemplate}</p>
+
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="options" direction="horizontal">
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="flex flex-wrap gap-2 bg-gray-100 p-4 rounded"
+                  >
+                    {currentQuestion.draggable_options?.map((opt, index) => (
+                      <Draggable key={opt} draggableId={opt} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className={`px-4 py-2 rounded bg-white border shadow cursor-move ${snapshot.isDragging ? 'bg-blue-100' : ''
+                              }`}
+                          >
+                            {opt}
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           </div>
         );
+
 
       case 'speaking_repetition':
         return (
@@ -212,9 +291,8 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
     return (
       <div className="max-w-4xl mx-auto p-8 text-center">
         <div className="mb-6">
-          <div className={`w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white ${
-            percentage >= 80 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-          }`}>
+          <div className={`w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white ${percentage >= 80 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+            }`}>
             {percentage}%
           </div>
           <h2 className="text-2xl font-bold text-[#1ea5b9] mb-2">Exercise Complete! 🏆</h2>
@@ -345,17 +423,17 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 
               {(!currentQuestion.isChecked &&
                 (currentQuestion.type === 'listening_writing' ||
-                currentQuestion.type === 'speaking_repetition' ||
-                currentQuestion.type === 'drag_and_drop')) && (
-                <Button
-                  onClick={nextQuestion}
-                  className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90"
-                  disabled={currentQuestion.type === 'listening_writing' && !currentQuestion.userAnswer}
-                >
-                  {currentQuestionIndex === questionsState.length - 1 ? 'Finish' : 'Next'}
-                  <ChevronRight className="h-4 w-4 ml-2" />
-                </Button>
-              )}
+                  currentQuestion.type === 'speaking_repetition' ||
+                  currentQuestion.type === 'drag_and_drop')) && (
+                  <Button
+                    onClick={nextQuestion}
+                    className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90"
+                    disabled={currentQuestion.type === 'listening_writing' && !currentQuestion.userAnswer}
+                  >
+                    {currentQuestionIndex === questionsState.length - 1 ? 'Finish' : 'Next'}
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                )}
             </div>
           </div>
         </CardContent>
