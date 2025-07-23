@@ -1,3 +1,7 @@
+// ==========================
+// ✅ User & Progress Models
+// ==========================
+
 export interface User {
   id: string;
   email: string;
@@ -7,103 +11,96 @@ export interface User {
 }
 
 export interface UserProgress {
-  completedUnits: number[];
-  exerciseScores: Record<string, ExerciseScore>;
-  currentUnit: number;
+  currentUnit: string; // e.g. "1"
+  completedUnits: Record<string, boolean>; // e.g. { "1": true }
+  subtopicsProgress: Record<string, SubtopicProgress>; // e.g. { "1.1": { ... } }
 }
 
-export interface ExerciseScore {
-  score: number;
-  totalQuestions: number;
-  completedAt: Date;
-  attempts: number;
+export interface SubtopicProgress {
+  completed: boolean;
+  games: Record<string, GameProgress>; // e.g. { "1.1.1": { ... } }
 }
 
-export interface GrammarTopic {
-  id: string;
-  title: string;
-  description: string;
-  usage: string;
-  examples: string[];
-  image: string;
-  isLocked: boolean;
-  isTopicCompleted: boolean;
-  unitId: number;
+export interface GameProgress {
+  completed: boolean;
+  score?: number;
+  attempts?: number;
+  completedAt?: string; // ISO Date
 }
+
+// =====================
+// ✅ Grammar Structures
+// =====================
 
 export interface GrammarUnit {
   id: number;
+  title: string;
+  description?: string;
   isUnitCompleted: boolean;
-  title: string;
-  description: string;
-  subtopics: GrammarTopic[];
+  subtopics: GrammarSubtopic[];
 }
 
-/*export interface Exercise {
-  id: string;
-  unitId: number;
+export interface GrammarSubtopic {
+  id: string; // "1.1"
   title: string;
-  description: string;
-  instructions: string;
-  type: 'multiple-choice' | 'drag-drop' | 'fill-blank' | 'matching';
-  questions: Question[];
+  description?: string;
+  usage?: string;
+  examples?: string[];
+  image?: string;
   isLocked: boolean;
-}*/
-
-export interface Question {
-  id: string;
-  text: string;
-  type: 'multiple-choice' | 'drag-drop' | 'fill-blank';
-  options?: string[];
-  correctAnswer: string | string[];
-  explanation: string;
-  userAnswer?: string | string[];
-  isChecked?: boolean;
-  isCorrect?: boolean;
+  isCompleted: boolean;
+  games: Game[];
 }
+
+export interface Game {
+  game_id: string;
+  type: GameType;
+  title: string;
+  instructions: string;
+  question: string;
+  answer: string;
+  options: string[];
+  audio_file: string | null;
+
+  justification?: string;
+  correct_feedback?: string;
+  incorrect_feedback?: string;
+  image_url?: string;
+
+  question_template: string;
+  blanks: { id: string; correct_answer: string }[];
+  draggable_options: string[];
+
+  transcript: string;
+  model_answer: string;
+  grading_criteria: string;
+
+  sentence_to_repeat: string;
+  audio_model_file: string;
+  target_words: string[];
+}
+
+export type GameType =
+  | "multiple_choice"
+  | "drag_and_drop"
+  | "listening_multiple_choice"
+  | "listening_writing"
+  | "speaking_repetition";
+
+
+// =====================
+// ✅ Auth Context Type
+// =====================
 
 export interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => void;
-  updateProgress: (unitId: number, exerciseId: string, score: ExerciseScore) => void;
-}
-
-// types.ts
-export interface Game {
-  game_id: string;
-  type: string;
-  title: string;
-  instructions: string;
-  justification?: string;
-  [key: string]: any;
-}
-
-export interface Subtopic {
-  subtopic_id: string;
-  subtopic_title: string;
-  is_locked: boolean;
-  description?: string;
-  games: Game[];
-}
-
-export interface Unit {
-  unit_id: number;
-  unit_title: string;
-  isUnitCompleted: boolean;
-  subtopics: Subtopic[];
-}
-
-export interface Exercise {
-  id: string;
-  unitId: number;
-  unitTitle: string;
-  subtopicId: string;
-  subtopicTitle: string;
-  title: string;
-  instructions: string;
-  description: string;
-  questions: Game[];
-  isLocked: boolean;
+  updateProgress: (
+    unitId: string,
+    subtopicId: string,
+    gameId: string,
+    progress: GameProgress
+  ) => void;
 }
