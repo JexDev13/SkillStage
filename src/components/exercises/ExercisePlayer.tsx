@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 import { DropResult } from 'react-beautiful-dnd';
 import { Game } from '../../types';
+import { Progress } from '../ui/progress';
+import toast from 'react-hot-toast';
 
 interface ExercisePlayerProps {
   exercise: {
@@ -16,11 +18,11 @@ interface ExercisePlayerProps {
   onBack: () => void;
 }
 
-interface GameProgress {
-  completed: boolean;
-  score?: number;
-  attempts?: number;
-  completedAt?: string;
+// Interfaz para el estado local de cada pregunta, extendiendo Game para facilitar la referencia
+interface QuestionState extends Game {
+  userAnswer?: string;
+  isChecked: boolean;
+  isCorrect?: boolean;
 }
 
 export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
@@ -34,24 +36,25 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
   }
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [checked, setChecked] = useState(false);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  // `questionsState` ahora maneja el estado de cada pregunta, incluyendo userAnswer, isChecked, isCorrect
+  const [questionsState, setQuestionsState] = useState<QuestionState[]>(
+    exercise.games.map(game => ({
+      ...game,
+      userAnswer: undefined,
+      isChecked: false,
+      isCorrect: undefined
+    }))
+  );
   const [timer, setTimer] = useState(0);
   const [showResults, setShowResults] = useState(false);
 
-  const currentQuestion: Game = exercise.games[currentQuestionIndex];
+  const currentQuestion: QuestionState = questionsState[currentQuestionIndex];
+  const progress = ((currentQuestionIndex + 1) / questionsState.length) * 100;
 
   useEffect(() => {
     const interval = setInterval(() => setTimer((t) => t + 1), 1000);
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    setSelectedAnswer(null);
-    setChecked(false);
-    setIsCorrect(null);
-  }, [currentQuestionIndex]);
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
@@ -59,27 +62,61 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
     return `${m}:${s}`;
   };
 
+  const handleAnswerSelect = (answer: string) => {
+    if (currentQuestion.isChecked) return;
+
+    const updatedQuestionsState = [...questionsState];
+    updatedQuestionsState[currentQuestionIndex] = {
+      ...currentQuestion,
+      userAnswer: answer
+    };
+    setQuestionsState(updatedQuestionsState);
+  };
+
   const checkAnswer = () => {
-    if (!selectedAnswer || (currentQuestion.type !== 'multiple_choice' && currentQuestion.type !== 'listening_multiple_choice')) return;
-    const correct = currentQuestion.answer === selectedAnswer;
-    setIsCorrect(correct);
-    setChecked(true);
+    if (!currentQuestion.userAnswer) {
+      toast.error('Please select an answer first');
+      return;
+    }
+
+    const correct = currentQuestion.answer === currentQuestion.userAnswer;
+    const updatedQuestionsState = [...questionsState];
+    updatedQuestionsState[currentQuestionIndex] = {
+      ...currentQuestion,
+      isChecked: true,
+      isCorrect: correct
+    };
+    setQuestionsState(updatedQuestionsState);
+
+    if (correct) {
+      toast.success('Correct!');
+    } else {
+      toast.error('Incorrect. Check the explanation below.');
+    }
   };
 
   const nextQuestion = () => {
-    const gameProgress: GameProgress = {
-      completed: true,
-      attempts: 1,
-      score: isCorrect ? 100 : 0,
-      completedAt: new Date().toISOString(),
-    };
+    if (
+      (currentQuestion.type === 'multiple_choice' || currentQuestion.type === 'listening_multiple_choice') &&
+      !currentQuestion.isChecked
+    ) {
+      toast.error('Please check your answer first!');
+      return;
+    }
 
-    // You could save progress here with updateProgress()
+    // No se guarda el progreso aquí directamente en un contexto externo.
+    // La lógica de guardado de progreso podría ser llamada en `onComplete` al finalizar el ejercicio.
 
-    if (currentQuestionIndex === exercise.games.length - 1) {
+    if (currentQuestionIndex === questionsState.length - 1) {
       setShowResults(true);
     } else {
       setCurrentQuestionIndex((i) => i + 1);
+    }
+  };
+
+  const previousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((i) => i - 1);
     }
   };
 
@@ -92,26 +129,41 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
       case 'multiple_choice':
       case 'listening_multiple_choice':
         return (
-          <div className="space-y-2">
-            {currentQuestion.options.map((opt, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedAnswer(opt)}
-                className={`block w-full text-left p-3 border rounded ${selectedAnswer === opt
-                  ? 'border-[#1ea5b9] bg-[#1ea5b9]/10'
-                  : 'border-gray-300 hover:border-[#1ea5b9]'
-                  }`}
-              >
-                {opt}
-              </button>
-            ))}
-            {checked && (
-              <div className={`mt-4 font-semibold ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                {isCorrect
-                  ? currentQuestion.correct_feedback || 'Correct!'
-                  : currentQuestion.incorrect_feedback || 'Incorrect.'}
-              </div>
-            )}
+          <div className="space-y-3">
+            {currentQuestion.options.map((opt, idx) => {
+              const isSelected = currentQuestion.userAnswer === opt;
+              const isCorrectOption = opt === currentQuestion.answer;
+              const showCorrectness = currentQuestion.isChecked;
+
+              let buttonClass = "w-full p-4 text-left border-2 rounded-lg transition-all flex items-center justify-between";
+
+              if (showCorrectness) {
+                if (isCorrectOption) {
+                  buttonClass += " border-green-500 bg-green-50 text-green-800";
+                } else if (isSelected && !isCorrectOption) {
+                  buttonClass += " border-red-500 bg-red-50 text-red-800";
+                } else {
+                  buttonClass += " border-gray-200 bg-gray-50 text-gray-600";
+                }
+              } else if (isSelected) {
+                buttonClass += " border-[#1ea5b9] bg-[#1ea5b9]/10 text-[#1ea5b9]";
+              } else {
+                buttonClass += " border-gray-200 hover:border-[#1ea5b9]/50 hover:bg-[#1ea5b9]/5";
+              }
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleAnswerSelect(opt)}
+                  disabled={currentQuestion.isChecked}
+                  className={buttonClass}
+                >
+                  <span>{opt}</span>
+                  {showCorrectness && isCorrectOption && <Check className="h-5 w-5 text-green-500" />}
+                  {showCorrectness && isSelected && !isCorrectOption && <X className="h-5 w-5 text-red-500" />}
+                </button>
+              );
+            })}
           </div>
         );
 
@@ -123,8 +175,8 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
             )}
             <textarea
               placeholder="Write your answer..."
-              value={selectedAnswer || ''}
-              onChange={(e) => setSelectedAnswer(e.target.value)}
+              value={currentQuestion.userAnswer || ''}
+              onChange={(e) => handleAnswerSelect(e.target.value)}
               className="w-full border p-2 rounded"
             />
           </div>
@@ -153,13 +205,74 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
   };
 
   if (showResults) {
+    const correctCount = questionsState.filter(q => q.isCorrect).length;
+    const answeredCount = questionsState.filter(q => q.userAnswer !== undefined).length;
+    const percentage = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+
     return (
       <div className="max-w-4xl mx-auto p-8 text-center">
-        <h2 className="text-2xl font-bold text-[#1ea5b9] mb-4">Exercise Completed! 🏆</h2>
-        <p className="mb-8">You completed the exercise in {formatTime(timer)}</p>
-        <Button onClick={onComplete} className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90">
-          Back to Exercises
-        </Button>
+        <div className="mb-6">
+          <div className={`w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white ${
+            percentage >= 80 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+          }`}>
+            {percentage}%
+          </div>
+          <h2 className="text-2xl font-bold text-[#1ea5b9] mb-2">Exercise Complete! 🏆</h2>
+          <p className="text-gray-600">You got {correctCount} out of {answeredCount} questions correct</p>
+          <p className="mb-8">You completed the exercise in {formatTime(timer)}</p>
+        </div>
+
+        <div className="space-y-4 mb-8">
+          {questionsState.filter(q => q.userAnswer !== undefined).map((question, index) => (
+            <div key={question.game_id} className="text-left p-4 border rounded-lg">
+              <div className="flex items-start space-x-2 mb-2">
+                {question.isCorrect ? (
+                  <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                ) : (
+                  <X className="h-5 w-5 text-red-500 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <p className="font-medium">{question.question || question.instructions}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Your answer: <span className={question.isCorrect ? 'text-green-600' : 'text-red-600'}>
+                      {question.userAnswer}
+                    </span>
+                  </p>
+                  {!question.isCorrect && (
+                    <p className="text-sm text-green-600 mt-1">
+                      Correct answer: {question.answer}
+                    </p>
+                  )}
+                  {question.justification && (
+                    <p className="text-sm text-gray-500 mt-2 italic">{question.justification}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-center space-x-4">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setCurrentQuestionIndex(0);
+              setQuestionsState(exercise.games.map(game => ({
+                ...game,
+                userAnswer: undefined,
+                isChecked: false,
+                isCorrect: undefined
+              })));
+              setShowResults(false);
+              setTimer(0);
+            }}
+          >
+            Try Again
+          </Button>
+          <Button onClick={onComplete} className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90">
+            Continue Learning
+          </Button>
+        </div>
       </div>
     );
   }
@@ -167,59 +280,82 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-4 flex justify-between items-center text-gray-600">
-        <Button variant="ghost" onClick={onBack} className="flex items-center space-x-1">
-          <ArrowLeft className="h-4 w-4" />
+        <Button variant="ghost" onClick={onBack} className="flex items-center space-x-1 text-[#1ea5b9] hover:bg-[#1ea5b9]/10">
+          <ArrowLeft className="h-4 w-4 mr-2" />
           <span>Back to Instructions</span>
         </Button>
         <div className="font-mono text-lg tracking-widest">{formatTime(timer)}</div>
       </div>
 
+      <div className="mb-6 flex items-center justify-between">
+        <div className="text-sm text-gray-600">
+          Question {currentQuestionIndex + 1} of {questionsState.length}
+        </div>
+        <Progress value={progress} className="h-2 w-2/3" />
+      </div>
+
       <Card className="shadow-lg border-none">
-        <CardContent>
-          <h3 className="text-xl font-semibold text-[#1ea5b9] mb-2">{exercise.title}</h3>
-          <p className="mb-6 font-semibold">{currentQuestion.instructions}</p>
-          {currentQuestion.question && <p className="mb-6">{currentQuestion.question}</p>}
-          {renderQuestionContent()}
-          {checked && currentQuestion.justification && (
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-left">
+        <CardContent className="p-8">
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-[#1ea5b9] mb-6">
+              {currentQuestion.instructions}
+            </h2>
+            {currentQuestion.question && <p className="mb-6">{currentQuestion.question}</p>}
+            {renderQuestionContent()}
+          </div>
+
+          {currentQuestion.isChecked && currentQuestion.justification && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h4 className="font-medium text-blue-800 mb-2">Explanation:</h4>
               <p className="text-blue-700">{currentQuestion.justification}</p>
             </div>
           )}
-          <div className="mt-6 flex justify-between items-center">
+
+          <div className="flex items-center justify-between">
             <Button
               variant="outline"
+              onClick={previousQuestion}
               disabled={currentQuestionIndex === 0}
-              onClick={() => setCurrentQuestionIndex((i) => i - 1)}
             >
               <ChevronLeft className="h-4 w-4 mr-2" />
               Previous
             </Button>
             <div className="flex space-x-3">
-              {!checked &&
-                (currentQuestion.type === 'multiple_choice' ||
-                  currentQuestion.type === 'listening_multiple_choice') && (
+              {!currentQuestion.isChecked &&
+                (currentQuestion.type === 'multiple_choice' || currentQuestion.type === 'listening_multiple_choice') &&
+                currentQuestion.userAnswer && (
                   <Button
-                    disabled={!selectedAnswer}
                     onClick={checkAnswer}
                     className="bg-[#ff852e] hover:bg-[#ff852e]/90"
                   >
+                    <Check className="h-4 w-4 mr-2" />
                     Check Answer
                   </Button>
                 )}
-              {(checked ||
-                currentQuestion.type === 'listening_writing' ||
+
+              {currentQuestion.isChecked && (
+                <Button
+                  onClick={nextQuestion}
+                  className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90"
+                >
+                  {currentQuestionIndex === questionsState.length - 1 ? 'Finish' : 'Next'}
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+              )}
+
+              {(!currentQuestion.isChecked &&
+                (currentQuestion.type === 'listening_writing' ||
                 currentQuestion.type === 'speaking_repetition' ||
-                currentQuestion.type === 'drag_and_drop') && (
-                  <Button
-                    disabled={currentQuestion.type === 'listening_writing' && !selectedAnswer && !checked}
-                    onClick={nextQuestion}
-                    className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90"
-                  >
-                    {currentQuestionIndex === exercise.games.length - 1 ? 'Finish' : 'Next'}
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Button>
-                )}
+                currentQuestion.type === 'drag_and_drop')) && (
+                <Button
+                  onClick={nextQuestion}
+                  className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90"
+                  disabled={currentQuestion.type === 'listening_writing' && !currentQuestion.userAnswer}
+                >
+                  {currentQuestionIndex === questionsState.length - 1 ? 'Finish' : 'Next'}
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>

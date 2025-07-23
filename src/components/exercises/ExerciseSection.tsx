@@ -115,10 +115,6 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
             </div>
 
             <div className="flex flex-col items-center justify-center space-y-2">
-              <div className="text-sm text-gray-600">
-                {selectedExercise.questions?.length || 0} game
-                {selectedExercise.questions?.length !== 1 ? 's' : ''}
-              </div>
               <Button
                 onClick={() => setShowInstructions(false)}
                 className="bg-[#ff852e] hover:bg-[#ff852e]/90 text-white px-8 py-3 text-lg"
