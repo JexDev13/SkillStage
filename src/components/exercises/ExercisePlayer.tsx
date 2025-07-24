@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { Game } from '../../types';
 import MultipleChoiceGame from './games/MultipleChoiceGame';
 import DragAndDropGame from './games/DragAndDropGame';
+import ListeningMultipleChoiceGame from './games/ListeningMultipleChoiceGame';
 import Timer from '../utils/Timer';
 
 interface ExercisePlayerProps {
@@ -66,9 +67,20 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
       return;
     }
 
-    const correct =
-      current.answer === current.userAnswer ||
-      current.blanks?.every((b, i) => b.correct_answer === current.userAnswer?.split(' ')[i]);
+    let correct = false;
+
+    switch (current.type) {
+      case 'multiple_choice':
+      case 'listening_multiple_choice':
+        correct = current.answer.trim() === current.userAnswer.trim();
+        break;
+      case 'drag_and_drop':
+        correct = current.blanks?.every((b, i) => b.correct_answer === current.userAnswer?.split(' ')[i]) ?? false;
+        break;
+      default:
+        correct = current.answer.trim() === current.userAnswer.trim();
+    }
+
     const updated = [...questions];
     updated[currentIndex] = {
       ...current,
@@ -79,6 +91,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 
     toast[correct ? 'success' : 'error'](correct ? 'Correct!' : 'Incorrect.');
   };
+
 
   const next = () => {
     if (
@@ -114,6 +127,8 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
         return <MultipleChoiceGame {...props} />;
       case 'drag_and_drop':
         return <DragAndDropGame {...props} />;
+      case 'listening_multiple_choice':
+        return <ListeningMultipleChoiceGame {...{ ...props, question: { ...current, audio_file: current.audio_file ?? '' } }} />;
       default:
         return <p>Unsupported question type: {current.type}</p>;
     }
@@ -200,7 +215,6 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
               <ChevronLeft className="h-4 w-4 mr-2" />
               Previous
             </Button>
-
             <div className="flex gap-3">
               {!current.isChecked &&
                 ['multiple_choice', 'listening_multiple_choice', 'drag_and_drop', 'listening_writing', 'speaking_repetition'].includes(current.type) &&
