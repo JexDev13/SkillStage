@@ -32,7 +32,7 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
   const [showInstructions, setShowInstructions] = useState(true);
   const [expandedUnit, setExpandedUnit] = useState<string>('');
   const [units, setUnits] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true); // ← Loader state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {

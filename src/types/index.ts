@@ -11,21 +11,21 @@ export interface User {
 }
 
 export interface UserProgress {
-  currentUnit: string; // e.g. "1"
-  completedUnits: Record<string, boolean>; // e.g. { "1": true }
-  subtopicsProgress: Record<string, SubtopicProgress>; // e.g. { "1.1": { ... } }
+  currentUnit: string;
+  completedUnits: Record<string, boolean>; 
+  subtopicsProgress: Record<string, SubtopicProgress>; 
 }
 
 export interface SubtopicProgress {
   completed: boolean;
-  games: Record<string, GameProgress>; // e.g. { "1.1.1": { ... } }
+  games: Record<string, GameProgress>; 
 }
 
 export interface GameProgress {
   completed: boolean;
   score?: number;
   attempts?: number;
-  completedAt?: string; // ISO Date
+  completedAt?: string;
 }
 
 // =====================
@@ -41,7 +41,7 @@ export interface GrammarUnit {
 }
 
 export interface GrammarSubtopic {
-  id: string; // "1.1"
+  id: string;
   title: string;
   description?: string;
   usage?: string;
