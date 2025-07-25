@@ -1,33 +1,109 @@
-import React, { useState } from 'react';
-import { Play, Lock, Trophy, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Play, Lock, Trophy, Clock, Check, Loader2  } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { exercises } from '../../data(deprecated)/exerciseData';
-import { Exercise } from '../../types';
-import { useAuth } from '../../contexts/AuthContext';
 import { ExercisePlayer } from './ExercisePlayer';
+import { useAuth } from '../../contexts/AuthContext';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from '../ui/accordion';
+import { cn } from '../../lib/utils';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { getDocs, collection } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { GrammarSubtopic, Game } from '../../types';
 
 interface ExerciseSectionProps {
-  selectedExercise: Exercise | null;
-  onExerciseSelect: (exercise: Exercise) => void;
+  selectedExercise: any;
+  onExerciseSelect: (exercise: any) => void;
   onBackToExercises: () => void;
 }
 
 export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
   selectedExercise,
   onExerciseSelect,
-  onBackToExercises
+  onBackToExercises,
 }) => {
   const { user } = useAuth();
   const [showInstructions, setShowInstructions] = useState(true);
+  const [expandedUnit, setExpandedUnit] = useState<string>('');
+  const [units, setUnits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const unitSnapshot = await getDocs(collection(db, 'grammar_units'));
+
+        const unitsData = await Promise.all(
+          unitSnapshot.docs.map(async (unitDoc) => {
+            const unitData = unitDoc.data();
+            const subtopicsSnapshot = await getDocs(
+              collection(db, `grammar_units/${unitDoc.id}/subtopics`)
+            );
+
+            const subtopics = await Promise.all(
+              subtopicsSnapshot.docs.map(async (subDoc) => {
+                const subData = subDoc.data();
+                const gamesSnapshot = await getDocs(
+                  collection(db, `grammar_units/${unitDoc.id}/subtopics/${subDoc.id}/games`)
+                );
+
+                const games = gamesSnapshot.docs.map((g) => ({
+                  ...g.data(),
+                  game_id: g.id,
+                })) as Game[];
+
+                return {
+                  ...subData,
+                  id: subDoc.id,
+                  games,
+                } as GrammarSubtopic;
+              })
+            );
+
+            return {
+              id: unitDoc.id,
+              title: unitData.title,
+              description: unitData.description,
+              isUnitCompleted: unitData.isUnitCompleted,
+              subtopics,
+            };
+          })
+        );
+
+        setUnits(unitsData);
+      } catch (error) {
+        console.error('Error loading exercises:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[300px]">
+        <Loader2 className="h-10 w-10 text-[#1ea5b9] animate-spin" />
+      </div>
+    );
+  }
 
   if (selectedExercise && !showInstructions) {
     return (
-      <ExercisePlayer
-        exercise={selectedExercise}
-        onComplete={onBackToExercises}
-        onBack={() => setShowInstructions(true)}
-      />
+      <DndProvider backend={HTML5Backend}>
+        <ExercisePlayer
+          exercise={selectedExercise}
+          onComplete={onBackToExercises}
+          onBack={() => setShowInstructions(true)}
+        />
+      </DndProvider>
     );
   }
 
@@ -43,7 +119,7 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
             ← Back to Exercises
           </Button>
         </div>
-        
+
         <Card className="border-none shadow-lg">
           <CardContent className="p-8 text-center">
             <div className="mb-6">
@@ -59,35 +135,23 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                 <Clock className="h-5 w-5 mr-2" />
                 Instructions
               </h3>
-              <p className="text-gray-700 leading-relaxed">{selectedExercise.instructions}</p>
+              <p className="text-gray-700 leading-relaxed">
+                Complete all the games in this subtopic to master the subject!
+              </p>
             </div>
 
-            <div className="flex items-center justify-center space-x-4">
-              <div className="text-sm text-gray-600">
-                {selectedExercise.questions.length} questions
-              </div>
-              <Button
-                onClick={() => setShowInstructions(false)}
-                className="bg-[#ff852e] hover:bg-[#ff852e]/90 text-white px-8 py-3 text-lg"
-              >
-                <Play className="h-5 w-5 mr-2" />
-                Start Exercise
-              </Button>
-            </div>
+            <Button
+              onClick={() => setShowInstructions(false)}
+              className="bg-[#ff852e] hover:bg-[#ff852e]/90 text-white px-8 py-3 text-lg"
+            >
+              <Play className="h-5 w-5 mr-2" />
+              Start Game
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
-
-  // Group exercises by unit
-  const exercisesByUnit = exercises.reduce((acc, exercise) => {
-    if (!acc[exercise.unitId]) {
-      acc[exercise.unitId] = [];
-    }
-    acc[exercise.unitId].push(exercise);
-    return acc;
-  }, {} as Record<number, Exercise[]>);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -96,79 +160,123 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
         <p className="text-gray-600">Test your knowledge with interactive exercises</p>
       </div>
 
-      <div className="space-y-8">
-        {Object.entries(exercisesByUnit).map(([unitId, unitExercises]) => (
-          <div key={unitId}>
-            <h2 className="text-xl font-semibold text-[#1ea5b9] mb-4">
-              Unit {unitId}
-            </h2>
-            
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {unitExercises.map((exercise) => {
-                const isLocked = exercise.isLocked;
-                const score = user?.progress.exerciseScores[exercise.id];
-                
-                return (
-                  <Card 
-                    key={exercise.id} 
-                    className={`border-2 transition-all duration-200 ${
-                      isLocked 
-                        ? 'opacity-50 cursor-not-allowed' 
-                        : 'hover:border-[#ff852e]/30 cursor-pointer hover:shadow-lg'
-                    }`}
-                    onClick={() => !isLocked && onExerciseSelect(exercise)}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-[#1ea5b9] mb-2">
-                            {exercise.title}
-                          </h3>
-                          <p className="text-sm text-gray-600 mb-3">
-                            {exercise.description}
-                          </p>
+      <div className="space-y-4">
+        {units.map((unit) => {
+          const isUnitLocked = unit.subtopics.every((s: { isLocked: boolean }) => s.isLocked);
+
+          return (
+            <Card key={unit.id} className="border-2 hover:border-[#1ea5b9]/30 transition-colors">
+              <CardContent className="p-0">
+                <Accordion
+                  type="single"
+                  collapsible
+                  value={expandedUnit}
+                  onValueChange={setExpandedUnit}
+                >
+                  <AccordionItem value={unit.id.toString()} className="border-none">
+                    <AccordionTrigger
+                      className={`px-6 py-4 hover:no-underline ${isUnitLocked ? 'opacity-50' : ''}`}
+                      disabled={isUnitLocked}
+                    >
+                      <div className="flex items-center space-x-4">
+                        {unit.isUnitCompleted ? (
+                          <Check className="h-5 w-5 text-green-500" />
+                        ) : isUnitLocked ? (
+                          <Lock className="h-5 w-5 text-gray-400" />
+                        ) : null}
+
+                        <div className="text-left">
+                          <h3 className="text-lg font-semibold text-[#1ea5b9]">{unit.title}</h3>
+                          <p className="text-sm text-gray-600 font-normal">{unit.description}</p>
                         </div>
-                        
-                        {isLocked ? (
-                          <Lock className="h-5 w-5 text-gray-400 ml-2" />
-                        ) : (
-                          <Play className="h-5 w-5 text-[#ff852e] ml-2" />
-                        )}
                       </div>
+                    </AccordionTrigger>
 
-                      <div className="flex items-center justify-between text-sm text-gray-500">
-                        <span>{exercise.questions.length} questions</span>
-                        
-                        {score && (
-                          <div className="flex items-center space-x-1">
-                            <Trophy className="h-4 w-4 text-[#ff852e]" />
-                            <span className="font-medium">
-                              {Math.round((score.score / score.totalQuestions) * 100)}%
-                            </span>
-                          </div>
-                        )}
+                    <AccordionContent className="px-6 pb-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {unit.subtopics.map((subtopic: GrammarSubtopic) => {
+                          const subtopicExercise = {
+                            id: subtopic.id,
+                            title: subtopic.title,
+                            description: subtopic.description,
+                            instructions: subtopic.description,
+                            questions: subtopic.games,
+                            isLocked: subtopic.isLocked,
+                          };
+
+                          const isSubtopicCompleted =
+                            user?.progress?.subtopicsProgress?.[subtopic.id]?.completed;
+                          const gamesCompleted = subtopic.games.filter(
+                            (game) =>
+                              user?.progress?.subtopicsProgress?.[subtopic.id]?.games?.[game.game_id]
+                                ?.completed
+                          ).length;
+                          const totalGames = subtopic.games.length;
+                          const score =
+                            totalGames > 0
+                              ? Math.round((gamesCompleted / totalGames) * 100)
+                              : undefined;
+
+                          return (
+                            <Card
+                              key={subtopicExercise.id}
+                              className={cn(
+                                'border-2 transition-colors',
+                                subtopicExercise.isLocked
+                                  ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed opacity-60'
+                                  : 'hover:border-[#ff852e]'
+                              )}
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between">
+                                  <h4 className="font-semibold text-[#1ea5b9] mb-1">
+                                    {subtopicExercise.title}
+                                  </h4>
+                                  {score !== undefined && (
+                                    <div className="flex items-center space-x-1 text-sm text-gray-500">
+                                      <Trophy className="h-4 w-4 text-[#ff852e]" />
+                                      <span className="font-medium">{score}%</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center justify-between mt-2">
+                                  <span className="text-sm text-gray-500">
+                                    {subtopicExercise.questions.length} game
+                                    {subtopicExercise.questions.length !== 1 ? 's' : ''}
+                                  </span>
+
+                                  {subtopicExercise.isLocked ? (
+                                    <Lock className="h-5 w-5 text-gray-400" />
+                                  ) : (
+                                    <Play className="h-5 w-5 text-[#ff852e]" />
+                                  )}
+                                </div>
+
+                                {!subtopicExercise.isLocked && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full mt-4 border-[#ff852e] text-[#ff852e] hover:bg-[#ff852e] hover:text-white"
+                                    onClick={() => {
+                                      onExerciseSelect(subtopic);
+                                    }}
+                                  >
+                                    {isSubtopicCompleted ? 'Practice Again' : 'Start Game'}
+                                  </Button>
+                                )}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
                       </div>
-
-                      {!isLocked && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full mt-4 border-[#ff852e] text-[#ff852e] hover:bg-[#ff852e] hover:text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onExerciseSelect(exercise);
-                          }}
-                        >
-                          {score ? 'Practice Again' : 'Start Exercise'}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
