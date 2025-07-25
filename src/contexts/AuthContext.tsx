@@ -5,15 +5,15 @@ import {
   signOut,
   onAuthStateChanged,
   User,
+  GoogleAuthProvider,
+  signInWithPopup,
+  sendPasswordResetEmail,
+  setPersistence,
+  browserSessionPersistence
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { initializeUserProgress } from '../lib/utils';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import {
-  GoogleAuthProvider,
-  signInWithPopup,
-} from 'firebase/auth';
 
 interface AuthContextProps {
   user: User | null;
@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      await setPersistence(auth, browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email, password);
       return true;
     } catch (error) {
@@ -84,11 +85,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUpWithGoogle = async () => {
     try {
+      await setPersistence(auth, browserSessionPersistence);
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-
-      // Crea el documento solo si no existe ya
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
       if (!userDoc.exists()) {
