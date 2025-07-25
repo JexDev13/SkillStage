@@ -16,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({ onHelpClick, onSettingsClick }) 
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center space-x-4">
           <img
-                src="/public/img/SKILLSTAGE.svg"
+                src="../img/SKILLSTAGE.svg"
                 alt="SkillStage Logo"
                 className="h-12"
               />
