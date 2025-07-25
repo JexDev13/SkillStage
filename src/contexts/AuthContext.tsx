@@ -1,109 +1,108 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthContextType, ExerciseScore } from '../types';
+// src/contexts/AuthContext.tsx
+import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  User,
+} from 'firebase/auth';
+import { auth, db } from '../firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { initializeUserProgress } from '../lib/utils';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-interface AuthProviderProps {
-  children: ReactNode;
+interface AuthContextProps {
+  user: User | null;
+  loading: boolean;
+  register: (email: string, password: string, name: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  loginWithGoogle: () => Promise<void>;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user data on app load
-    const storedUser = localStorage.getItem('englishLearningUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // For demo purposes, accept any email/password combination
-    const newUser: User = {
-      id: '1',
-      email,
-      name: email.split('@')[0],
-      progress: {
-        completedUnits: [],
-        exerciseScores: {},
-        currentUnit: 1
-      }
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('englishLearningUser', JSON.stringify(newUser));
-    return true;
+  const register = async (email: string, password: string, name: string) => {
+    try {
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+      const uid = res.user.uid;
+      await setDoc(doc(db, 'users', uid), {
+        name,
+        email,
+        createdAt: new Date(),
+      });
+
+      await initializeUserProgress(uid);
+
+      return true;
+    } catch (error) {
+      console.error('Error creating account:', error);
+      return false;
+    }
   };
 
-  const register = async (email: string, password: string, name: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const newUser: User = {
-      id: Date.now().toString(),
-      email,
-      name,
-      progress: {
-        completedUnits: [],
-        exerciseScores: {},
-        currentUnit: 1
-      }
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('englishLearningUser', JSON.stringify(newUser));
-    return true;
+  const login = async (email: string, password: string) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('englishLearningUser');
+  const logout = async () => {
+    await signOut(auth);
   };
 
-  const updateProgress = (unitId: number, exerciseId: string, score: ExerciseScore) => {
-    if (!user) return;
-    
-    const updatedUser = {
-      ...user,
-      progress: {
-        ...user.progress,
-        exerciseScores: {
-          ...user.progress.exerciseScores,
-          [exerciseId]: score
-        },
-        completedUnits: user.progress.completedUnits.includes(unitId) 
-          ? user.progress.completedUnits 
-          : [...user.progress.completedUnits, unitId]
-      }
-    };
-    
-    setUser(updatedUser);
-    localStorage.setItem('englishLearningUser', JSON.stringify(updatedUser));
-  };
+  const loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    const res = await signInWithPopup(auth, provider);
+    const uid = res.user.uid;
 
-  const value: AuthContextType = {
-    user,
-    login,
-    register,
-    logout,
-    updateProgress
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    if (!userDoc.exists()) {
+      await setDoc(doc(db, 'users', uid), {
+        name: res.user.displayName,
+        email: res.user.email,
+        createdAt: new Date(),
+      });
+
+      await setDoc(doc(db, 'users', uid, 'user_progress', 'unit_1'), {
+        unitId: '1',
+        isUnitCompleted: false,
+        subtopics: [
+          { id: 'sub_1', isCompleted: false, isLocked: false },
+          { id: 'sub_2', isCompleted: false, isLocked: true },
+          // ...
+        ],
+      });
+    }
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, loading, register, login, logout, loginWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
 };

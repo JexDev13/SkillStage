@@ -5,7 +5,11 @@ import { AuthScreen } from './screens/AuthScreen';
 import { MainScreen } from './screens/MainScreen';
 
 const AppContent: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
 
   if (!user) {
     return <AuthScreen />;

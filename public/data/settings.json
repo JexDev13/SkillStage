@@ -1,4 +1,11 @@
 {
+  "version": "1.0",
+  "appName": "SkillStage",
+  "language": "en",
+  "dateFormat": "MM/DD/YYYY",
+  "timeFormat": "HH:mm:ss",
+  "timezone": "UTC",
+  "dateTimeFormat": "MM/DD/YYYY HH:mm:ss",
   "fontSizeOptions": [
     "small",
     "medium",

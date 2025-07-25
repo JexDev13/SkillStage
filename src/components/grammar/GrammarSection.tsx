@@ -30,39 +30,55 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchGrammarUnits = async () => {
+    if (!user) return;
+
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
         const unitsSnapshot = await getDocs(collection(db, 'grammar_units'));
+        const userProgressSnapshot = await getDocs(collection(db, 'users', user.uid, 'user_progress'));
+        const userProgressMap: Record<string, any> = {};
+        userProgressSnapshot.docs.forEach(doc => {
+          userProgressMap[doc.id] = doc.data();
+        });
 
         const unitsData: GrammarUnit[] = await Promise.all(
           unitsSnapshot.docs.map(async (unitDoc) => {
+            const unitId = unitDoc.id;
             const unitData = unitDoc.data();
+
+            const unitProgress = userProgressMap[unitId];
+
             const subtopicsSnapshot = await getDocs(
-              collection(db, `grammar_units/${unitDoc.id}/subtopics`)
+              collection(db, `grammar_units/${unitId}/subtopics`)
             );
 
             const subtopics: GrammarSubtopic[] = subtopicsSnapshot.docs.map((subDoc) => {
               const subData = subDoc.data();
+              const subId = subDoc.id;
+
+              const progressArray = unitProgress?.subtopics ?? [];
+              const progressSub = progressArray.find((s: any) => s.id === subId);
 
               return {
-                id: subDoc.id,
+                id: subId,
                 title: subData.title,
                 description: subData.description,
                 usage: subData.usage,
                 examples: subData.examples || [],
                 image: subData.image,
-                isLocked: subData.isLocked,
-                isCompleted: subData.isCompleted,
-                games: []
+                games: subData.games || [],
+                isLocked: progressSub ? progressSub.isLocked : true,
+                isCompleted: progressSub ? progressSub.isCompleted : false,
               };
             });
 
             return {
-              id: parseInt(unitDoc.id),
+              id: parseInt(unitId),
               title: unitData.title,
               description: unitData.description,
-              isUnitCompleted: unitData.isCompleted,
-              subtopics
+              isUnitCompleted: unitProgress?.isUnitCompleted ?? false,
+              subtopics,
             };
           })
         );
@@ -75,13 +91,21 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
       }
     };
 
-    fetchGrammarUnits();
-  }, []);
+    fetchData();
+  }, [user]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
         <Loader2 className="h-10 w-10 text-[#1ea5b9] animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-red-500">You need to be logged in to see this content.</p>
       </div>
     );
   }
@@ -153,9 +177,7 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
 
       <div className="space-y-4">
         {grammarUnits.map((unit) => {
-          const isLocked =
-            unit.subtopics.every((t) => t.isLocked) &&
-            !user?.progress.completedUnits[unit.id.toString()];
+          const isLocked = unit.subtopics.every((t) => t.isLocked);
 
           return (
             <Card
@@ -201,11 +223,10 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
                                 }
                               }}
                               disabled={topic.isLocked}
-                              className={`w-full justify-start text-left p-4 h-auto flex items-center space-x-2 ${
-                                topic.isLocked
-                                  ? 'opacity-50 cursor-not-allowed'
-                                  : 'hover:bg-[#1ea5b9]/10'
-                              }`}
+                              className={`w-full justify-start text-left p-4 h-auto flex items-center space-x-2 ${topic.isLocked
+                                ? 'opacity-50 cursor-not-allowed'
+                                : 'hover:bg-[#1ea5b9]/10'
+                                }`}
                             >
                               {topic.isCompleted ? (
                                 <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
