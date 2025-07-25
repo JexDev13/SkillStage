@@ -7,9 +7,13 @@ import {
   User,
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { initializeUserProgress } from '../lib/utils';
 import { sendPasswordResetEmail } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+} from 'firebase/auth';
 
 interface AuthContextProps {
   user: User | null;
@@ -18,6 +22,7 @@ interface AuthContextProps {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   resetPassword: (email: string) => Promise<boolean>;
+  signUpWithGoogle: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -77,8 +82,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signUpWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Crea el documento solo si no existe ya
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          name: user.displayName,
+          email: user.email,
+          createdAt: new Date(),
+        });
+
+        await initializeUserProgress(user.uid);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      return false;
+    }
+  };
+
+
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, logout, resetPassword }}>
+    <AuthContext.Provider value={{ user, loading, register, login, logout, resetPassword, signUpWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );

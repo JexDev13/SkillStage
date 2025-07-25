@@ -20,7 +20,7 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, signUpWithGoogle } = useAuth();
   const {
     register,
     handleSubmit,
@@ -49,7 +49,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
     }`;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="max-h-screen flex items-center justify-center px-4">
       <Card className="w-full max-w-md shadow-2xl rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
         <CardHeader className="text-center space-y-2 pt-6">
           <img src="/img/SKILLSTAGE.svg" alt="SkillStage Logo" className="mx-auto h-10 w-auto dark:invert" />
@@ -58,8 +58,31 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
         </CardHeader>
 
         <CardContent className="px-6 pb-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div className="flex items-center justify-center mb-4">
+            <Button
+              type="button"
+              className="w-full border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-white bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium py-2 rounded-lg flex items-center justify-center gap-2"
+              onClick={async () => {
+                const success = await signUpWithGoogle();
+                if (success) {
+                  toast.success('Signed in with Google!');
+                } else {
+                  toast.error('Google sign-in failed');
+                }
+              }}
+            >
+              <img src="/img/google-icon.svg" alt="Google Icon" className="h-5 w-5" />
+              Sign up with Google
+            </Button>
+          </div>
 
+          <div className="flex items-center my-6">
+            <hr className="flex-grow border-t border-gray-300 dark:border-gray-700" />
+            <span className="px-4 text-sm text-gray-500 dark:text-gray-400 font-medium">OR</span>
+            <hr className="flex-grow border-t border-gray-300 dark:border-gray-700" />
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <Input
@@ -80,7 +103,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
               <Input
                 type="email"
                 placeholder="Email"
-                className={inputClass(!!errors.email)} 
+                className={inputClass(!!errors.email)}
                 style={{ paddingLeft: '2.5rem' }}
                 {...register('email', {
                   required: 'Email is required',
@@ -132,7 +155,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
               type="submit"
               className="w-full bg-[#1ea5b9] hover:bg-[#1a8fa0] text-white font-semibold py-2 rounded-lg"
             >
-              Register
+              Sing up
             </Button>
           </form>
 

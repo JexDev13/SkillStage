@@ -18,7 +18,7 @@ interface LoginFormProps {
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, signUpWithGoogle } = useAuth();
   const {
     register,
     handleSubmit,
@@ -48,7 +48,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
     }`;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="max-h-screen flex items-center justify-center px-4">
       <Card className="w-full max-w-md shadow-2xl rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
         <CardHeader className="text-center space-y-2 pt-6">
           <img
@@ -61,6 +61,28 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
         </CardHeader>
 
         <CardContent className="px-6 pb-6">
+          <div className="flex items-center justify-center">
+            <Button
+              type="button"
+              className="w-full border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-white bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium py-2 rounded-lg flex items-center justify-center gap-2"
+              onClick={async () => {
+                const success = await signUpWithGoogle();
+                if (success) {
+                  toast.success('Signed in with Google!');
+                } else {
+                  toast.error('Google sign-in failed');
+                }
+              }}
+            >
+              <img src="/img/google-icon.svg" alt="Google Icon" className="h-5 w-5" />
+              Sign in with Google
+            </Button>
+          </div>
+          <div className="flex items-center my-6">
+            <hr className="flex-grow border-t border-gray-300 dark:border-gray-700" />
+            <span className="px-4 text-sm text-gray-500 dark:text-gray-400 font-medium">OR</span>
+            <hr className="flex-grow border-t border-gray-300 dark:border-gray-700" />
+          </div>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
