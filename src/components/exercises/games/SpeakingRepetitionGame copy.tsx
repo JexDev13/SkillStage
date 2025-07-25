@@ -280,10 +280,11 @@ const SpeakingRepetitionGame: React.FC<SpeakingRepetitionGameProps> = ({
 
             {audioURL && (
                 <div className="mt-4">
-                    <p className="text-sm text-gray-600 mb-1">Your transcript</p>
+                    <p className="text-sm text-gray-600 mb-1">Your recording:</p>
+                    <audio controls src={audioURL} className="mx-auto" />
                     {transcript && (
                         <p className="mt-2 italic text-gray-800 text-sm font-semibold">
-                            "{transcript}"
+                            My transcript: "{transcript}"
                         </p>
                     )}
                 </div>

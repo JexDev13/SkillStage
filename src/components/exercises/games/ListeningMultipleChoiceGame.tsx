@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { Check, X, ChevronDown, Play } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Check, X, ChevronDown, Play, Pause } from 'lucide-react';
 
 interface ListeningMultipleChoiceGameProps {
     question: {
@@ -22,13 +22,30 @@ const ListeningMultipleChoiceGame: React.FC<ListeningMultipleChoiceGameProps> = 
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [playbackRate, setPlaybackRate] = useState(1);
     const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
 
     const handlePlayAudio = () => {
-        if (audioRef.current) {
-            audioRef.current.currentTime = 0;
-            audioRef.current.play();
+        if (!audioRef.current) return;
+
+        const audio = audioRef.current;
+
+        if (audio.paused) {
+            audio.play();
+            setIsPlaying(true);
+        } else {
+            audio.pause();
+            setIsPlaying(false);
         }
     };
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const handleEnded = () => setIsPlaying(false);
+        audio.addEventListener('ended', handleEnded);
+        return () => audio.removeEventListener('ended', handleEnded);
+    }, []);
 
     const handleSpeedChange = (rate: number) => {
         setPlaybackRate(rate);
@@ -53,8 +70,14 @@ const ListeningMultipleChoiceGame: React.FC<ListeningMultipleChoiceGameProps> = 
                         disabled={disabled}
                         className="flex items-center space-x-2 disabled:opacity-50"
                     >
-                        <Play className="h-5 w-5 text-[#1ea5b9]" />
-                        <span className="text-[#1ea5b9] font-medium">Play Audio</span>
+                        {isPlaying ? (
+                            <Pause className="h-5 w-5 text-[#1ea5b9]" />
+                        ) : (
+                            <Play className="h-5 w-5 text-[#1ea5b9]" />
+                        )}
+                        <span className="text-[#1ea5b9] font-medium">
+                            {isPlaying ? 'Pause Audio' : 'Play Audio'}
+                        </span>
                     </button>
 
                     <div className="relative">
@@ -92,7 +115,7 @@ const ListeningMultipleChoiceGame: React.FC<ListeningMultipleChoiceGameProps> = 
                     const isSelected = question.userAnswer === opt;
                     const isCorrect = opt === question.answer;
                     const show = question.isChecked;
-                    
+
                     let className =
                         'w-full p-4 text-left border-2 rounded-lg transition-all flex items-center justify-between';
 
