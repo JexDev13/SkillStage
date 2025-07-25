@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Lock, Trophy, Clock, Check, Loader2  } from 'lucide-react';
+import { Play, Lock, Trophy, Clock, Check, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { ExercisePlayer } from './ExercisePlayer';
@@ -35,57 +35,86 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const unitSnapshot = await getDocs(collection(db, 'grammar_units'));
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
-        const unitsData = await Promise.all(
-          unitSnapshot.docs.map(async (unitDoc) => {
-            const unitData = unitDoc.data();
-            const subtopicsSnapshot = await getDocs(
-              collection(db, `grammar_units/${unitDoc.id}/subtopics`)
-            );
+  const fetchData = async () => {
+    if (!user) return;
+    setLoading(true);
 
-            const subtopics = await Promise.all(
-              subtopicsSnapshot.docs.map(async (subDoc) => {
-                const subData = subDoc.data();
-                const gamesSnapshot = await getDocs(
-                  collection(db, `grammar_units/${unitDoc.id}/subtopics/${subDoc.id}/games`)
-                );
+    try {
+      const unitSnapshot = await getDocs(collection(db, 'grammar_units'));
 
-                const games = gamesSnapshot.docs.map((g) => ({
-                  ...g.data(),
-                  game_id: g.id,
-                })) as Game[];
+      const unitsData = await Promise.all(
+        unitSnapshot.docs.map(async (unitDoc) => {
+          const unitData = unitDoc.data();
+          const id = unitDoc.id;
+          const progressDocRef = collection(db, `users/${user.uid}/user_progress`);
+          const userProgressSnapshot = await getDocs(progressDocRef);
+          const userProgressDocs = userProgressSnapshot.docs.map((d) => d.data());
+          const userUnitProgress = userProgressDocs.find((p) => p.id === id);
+          const progressMap: Record<string, any> = {};
+          if (userUnitProgress) {
+            for (const sub of userUnitProgress.subtopics || []) {
+              progressMap[sub.id] = sub;
+            }
+          }
 
-                return {
-                  ...subData,
-                  id: subDoc.id,
-                  games,
-                } as GrammarSubtopic;
-              })
-            );
+          const subtopicsSnapshot = await getDocs(
+            collection(db, `grammar_units/${id}/subtopics`)
+          );
 
-            return {
-              id: unitDoc.id,
-              title: unitData.title,
-              description: unitData.description,
-              isUnitCompleted: unitData.isUnitCompleted,
-              subtopics,
-            };
-          })
-        );
+          const subtopics = await Promise.all(
+            subtopicsSnapshot.docs.map(async (subDoc) => {
+              const subData = subDoc.data();
+              const gamesSnapshot = await getDocs(
+                collection(db, `grammar_units/${id}/subtopics/${subDoc.id}/games`)
+              );
 
-        setUnits(unitsData);
-      } catch (error) {
-        console.error('Error loading exercises:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+              const games = gamesSnapshot.docs.map((g) => ({
+                ...g.data(),
+                game_id: g.id,
+              })) as Game[];
 
-    fetchData();
-  }, []);
+              const subId = subDoc.id;
+              const progress = progressMap[subId] || { isLocked: true, isCompleted: false };
+
+              return {
+                ...subData,
+                id: subId,
+                games,
+                isLocked: progress.isLocked,
+                isCompleted: progress.isCompleted,
+                score: progress.score || 0,
+              } as GrammarSubtopic;
+            })
+          );
+
+          return {
+            id: id,
+            title: unitData.title,
+            description: unitData.description,
+            isUnitCompleted: userUnitProgress?.isUnitCompleted || false,
+            subtopics,
+          };
+        })
+      );
+
+      setUnits(unitsData);
+    } catch (error) {
+      console.error('Error loading exercises:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExerciseComplete = async () => {
+    onBackToExercises();
+    await fetchData();
+  };
+
 
   if (loading) {
     return (
@@ -99,8 +128,8 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
     return (
       <DndProvider backend={HTML5Backend}>
         <ExercisePlayer
-          exercise={selectedExercise}
-          onComplete={onBackToExercises}
+          exercise={{ ...selectedExercise, unitId: selectedExercise.unitId }}
+          onComplete={handleExerciseComplete}
           onBack={() => setShowInstructions(true)}
         />
       </DndProvider>
@@ -145,7 +174,7 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
               className="bg-[#ff852e] hover:bg-[#ff852e]/90 text-white px-8 py-3 text-lg"
             >
               <Play className="h-5 w-5 mr-2" />
-              Start Game
+              {selectedExercise.score != 0 ? 'Play Again' : 'Start Game'}
             </Button>
           </CardContent>
         </Card>
@@ -204,18 +233,8 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                             isLocked: subtopic.isLocked,
                           };
 
-                          const isSubtopicCompleted =
-                            user?.progress?.subtopicsProgress?.[subtopic.id]?.completed;
-                          const gamesCompleted = subtopic.games.filter(
-                            (game) =>
-                              user?.progress?.subtopicsProgress?.[subtopic.id]?.games?.[game.game_id]
-                                ?.completed
-                          ).length;
-                          const totalGames = subtopic.games.length;
-                          const score =
-                            totalGames > 0
-                              ? Math.round((gamesCompleted / totalGames) * 100)
-                              : undefined;
+                          const isSubtopicCompleted = subtopic.isCompleted;
+                          const score = subtopic.score;
 
                           return (
                             <Card
@@ -259,7 +278,10 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                                     size="sm"
                                     className="w-full mt-4 border-[#ff852e] text-[#ff852e] hover:bg-[#ff852e] hover:text-white"
                                     onClick={() => {
-                                      onExerciseSelect(subtopic);
+                                      onExerciseSelect({
+                                        ...subtopic,
+                                        unitId: unit.id,
+                                      });
                                     }}
                                   >
                                     {isSubtopicCompleted ? 'Practice Again' : 'Start Game'}

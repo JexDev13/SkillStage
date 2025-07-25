@@ -11,6 +11,9 @@ import ListeningMultipleChoiceGame from './games/ListeningMultipleChoiceGame';
 import ListeningWritingGame from './games/ListeningWritingGame';
 import SpeakingRepetitionGame from './games/SpeakingRepetitionGame';
 import Timer from '../utils/Timer';
+import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface ExercisePlayerProps {
 	exercise: {
@@ -34,6 +37,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 	onComplete,
 	onBack,
 }) => {
+	const { user } = useAuth();
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [questions, setQuestions] = useState<QuestionState[]>(
 		exercise.games.map((game) => ({
@@ -110,7 +114,6 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 		toast[correct ? 'success' : 'error'](correct ? 'Correct!' : 'Incorrect.');
 	};
 
-
 	const next = () => {
 		if (
 			['multiple_choice', 'listening_multiple_choice', 'drag_and_drop', 'listening_writing', 'speaking_repetition'].includes(current.type) &&
@@ -161,16 +164,126 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 		}
 	};
 
+	const updateUserProgress = async (score: number) => {
+		if (!user) return;
+
+		const { unitId, id: subtopicId } = exercise;
+
+		try {
+			const userProgressRef = doc(db, 'users', user.uid, 'user_progress', unitId);
+			const userProgressSnap = await getDoc(userProgressRef);
+			let userProgressData: any = userProgressSnap.exists() ? userProgressSnap.data() : { unitId, subtopics: [] };
+
+			if (!userProgressData.subtopics) userProgressData.subtopics = [];
+
+			const existingSubtopicIndex = userProgressData.subtopics.findIndex((s: any) => s.id === subtopicId);
+
+			if (existingSubtopicIndex !== -1) {
+				userProgressData.subtopics[existingSubtopicIndex].score = score;
+				if (score >= 80) userProgressData.subtopics[existingSubtopicIndex].isCompleted = true;
+			} else {
+				userProgressData.subtopics.push({
+					id: subtopicId,
+					score,
+					isCompleted: score >= 80,
+					isLocked: false,
+				});
+			}
+
+			if (score >= 80) {
+				const subtopicsSnap = await getDocs(collection(db, `grammar_units/${unitId}/subtopics`));
+				const subtopicIds = subtopicsSnap.docs.map((doc) => doc.id);
+
+				const currentIndex = subtopicIds.indexOf(subtopicId);
+
+				const nextIndex = currentIndex + 1;
+
+				if (nextIndex < subtopicIds.length) {
+					const nextSubId = subtopicIds[nextIndex];
+
+					const nextSubIndex = userProgressData.subtopics.findIndex((s: any) => s.id === nextSubId);
+					if (nextSubIndex === -1) {
+						userProgressData.subtopics.push({
+							id: nextSubId,
+							isLocked: false,
+							isCompleted: false,
+							score: 0,
+						});
+					} else {
+						userProgressData.subtopics[nextSubIndex].isLocked = false;
+					}
+				} else {
+					const unitsSnap = await getDocs(collection(db, 'grammar_units'));
+					const unitIds = unitsSnap.docs.map((doc) => doc.id);
+
+					const currentUnitIndex = unitIds.indexOf(unitId);
+					const nextUnitIndex = currentUnitIndex + 1;
+
+					if (nextUnitIndex < unitIds.length) {
+						const nextUnitId = unitIds[nextUnitIndex];
+
+						const nextUnitSubtopicsSnap = await getDocs(collection(db, `grammar_units/${nextUnitId}/subtopics`));
+						if (nextUnitSubtopicsSnap.docs.length > 0) {
+							const firstSubIdNextUnit = nextUnitSubtopicsSnap.docs[0].id;
+
+							const nextUnitProgressRef = doc(db, 'users', user.uid, 'user_progress', nextUnitId);
+							const nextUnitProgressSnap = await getDoc(nextUnitProgressRef);
+
+							let nextUnitProgressData = nextUnitProgressSnap.exists() ? nextUnitProgressSnap.data() : null;
+
+							if (!nextUnitProgressData) {
+								await setDoc(nextUnitProgressRef, {
+									unitId: nextUnitId,
+									subtopics: [{
+										id: firstSubIdNextUnit,
+										isLocked: false,
+										isCompleted: false,
+										score: 0,
+									}],
+								});
+							} else {
+								if (!nextUnitProgressData.subtopics) nextUnitProgressData.subtopics = [];
+
+								const firstSubIndex = nextUnitProgressData.subtopics.findIndex((s: any) => s.id === firstSubIdNextUnit);
+								if (firstSubIndex === -1) {
+									nextUnitProgressData.subtopics.push({
+										id: firstSubIdNextUnit,
+										isLocked: false,
+										isCompleted: false,
+										score: 0,
+									});
+								} else if (nextUnitProgressData.subtopics[firstSubIndex].isLocked) {
+									nextUnitProgressData.subtopics[firstSubIndex].isLocked = false;
+								}
+								await setDoc(nextUnitProgressRef, nextUnitProgressData);
+							}
+						}
+					}
+				}
+			}
+
+			const allCompleted = userProgressData.subtopics.every((s: any) => s.isCompleted);
+			if (allCompleted) {
+				userProgressData.isUnitCompleted = true;
+			}
+
+			await setDoc(userProgressRef, userProgressData);
+		} catch (error) {
+			console.error('❌ Error actualizando progreso:', error);
+		}
+	};
+
+
 	if (showResults) {
 		const correctCount = questions.filter((q) => q.isCorrect).length;
 		const answeredCount = questions.filter((q) => q.userAnswer !== undefined).length;
-		const percentage = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+		const score = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
 
 		return (
 			<div className="max-w-4xl mx-auto p-8 text-center">
 				<div className="mb-6">
-					<div className={`w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white ${percentage >= 80 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}>
-						{percentage}%
+					<div className={`w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white ${score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}>
+						{score}%
 					</div>
 					<h2 className="text-2xl font-bold text-[#1ea5b9] mb-2">Exercise Complete! 🏆</h2>
 					<p className="text-gray-600">You got {correctCount} of {answeredCount} correct</p>
@@ -193,7 +306,13 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 					>
 						Try Again
 					</Button>
-					<Button onClick={onComplete} className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90">
+					<Button
+						onClick={async () => {
+							await updateUserProgress(score);
+							onComplete();
+						}}
+						className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90"
+					>
 						Continue Learning
 					</Button>
 				</div>

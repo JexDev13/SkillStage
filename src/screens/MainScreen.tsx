@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Header } from '../components/layout/Header';
 import { Sidebar } from '../components/layout/Sidebar';
 import { GrammarSection } from '../components/grammar/GrammarSection';
@@ -7,28 +7,80 @@ import { HelpDialog } from '../components/help/HelpDialog';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { Card, CardContent } from '../components/ui/card';
 import { Book, GamepadIcon, Trophy, Clock } from 'lucide-react';
-import { GrammarTopic, Exercise } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { Game, GrammarSubtopic } from '../types';
+import { collection, getDocs } from 'firebase/firestore';
+
 
 export const MainScreen: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
-  const [selectedGrammarTopic, setSelectedGrammarTopic] = useState<GrammarTopic | null>(null);
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedGrammarTopic, setSelectedGrammarTopic] = useState<GrammarSubtopic | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<Game | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchProgress = async () => {
+      setLoading(true);
+      try {
+        const userDocSnap = await getDoc(doc(db, 'users', user.uid));
+        const userInfo = userDocSnap.exists() ? userDocSnap.data() : null;
+
+        const progressSnapshot = await getDocs(collection(db, `users/${user.uid}/user_progress`));
+        const progressData: Record<string, any> = {};
+
+        progressSnapshot.forEach((doc) => {
+          progressData[doc.id] = doc.data();
+        });
+
+        const completedUnits = Object.entries(progressData)
+          .filter(([_, unit]) => unit.isUnitCompleted)
+          .map(([unitId]) => unitId);
+
+        setUserData({ ...userInfo, progress: { ...progressData, completedUnits } });
+      } catch (error) {
+        console.error('Error fetching user progress:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProgress();
+  }, [user]);
+
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    setSelectedGrammarTopic(null);
-    setSelectedExercise(null);
   };
+
+  if (!user && !loading) {
+    return (
+      <div className="h-screen flex items-center justify-center text-gray-600 text-xl">
+        Please log in to access the platform.
+      </div>
+    );
+  }
+
+  if (loading || !userData) {
+    return (
+      <div className="h-screen flex items-center justify-center text-gray-400 text-xl">
+        Loading content...
+      </div>
+    );
+  }
 
   const renderHomeContent = () => (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold text-[#1ea5b9] mb-4">
-          Welcome back, {user?.name}!
+          Welcome back, {userData?.name || 'Student'}!
         </h1>
         <p className="text-gray-600 text-lg">
           Continue your English learning journey
@@ -37,7 +89,7 @@ export const MainScreen: React.FC = () => {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
         <Card className="border-2 border-[#1ea5b9]/20 hover:border-[#1ea5b9]/40 transition-colors cursor-pointer"
-              onClick={() => setActiveTab('grammar')}>
+          onClick={() => setActiveTab('grammar')}>
           <CardContent className="p-6 text-center">
             <Book className="h-12 w-12 text-[#d43241] mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-[#1ea5b9] mb-2">Grammar Theory</h3>
@@ -48,7 +100,7 @@ export const MainScreen: React.FC = () => {
         </Card>
 
         <Card className="border-2 border-[#ff852e]/20 hover:border-[#ff852e]/40 transition-colors cursor-pointer"
-              onClick={() => setActiveTab('exercises')}>
+          onClick={() => setActiveTab('exercises')}>
           <CardContent className="p-6 text-center">
             <GamepadIcon className="h-12 w-12 text-[#ff852e] mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-[#1ea5b9] mb-2">Practice Exercises</h3>
@@ -63,7 +115,7 @@ export const MainScreen: React.FC = () => {
             <Trophy className="h-12 w-12 text-[#463675] mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-[#1ea5b9] mb-2">Your Progress</h3>
             <p className="text-gray-600 text-sm">
-              Units completed: {user?.progress.completedUnits.length || 0}
+              Units completed: {userData?.progress?.completedUnits?.length || 0}
             </p>
           </CardContent>
         </Card>
@@ -77,17 +129,45 @@ export const MainScreen: React.FC = () => {
               Recent Activity
             </h3>
             <div className="space-y-3">
-              {Object.entries(user?.progress.exerciseScores || {}).slice(0, 3).map(([exerciseId, score]) => (
-                <div key={exerciseId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm font-medium">{exerciseId.replace('-', ' ')}</span>
-                  <span className="text-sm text-[#ff852e] font-semibold">
-                    {Math.round((score.score / score.totalQuestions) * 100)}%
-                  </span>
-                </div>
-              ))}
-              {Object.keys(user?.progress.exerciseScores || {}).length === 0 && (
-                <p className="text-gray-500 text-sm italic">No exercises completed yet</p>
-              )}
+              {(() => {
+                const completedSubtopics: { unitId: string; id: any; score: any }[] = [];
+
+                for (const unitId in userData?.progress) {
+                  const unitProgress = userData.progress[unitId];
+
+                  if (!unitProgress?.subtopics) {
+                    continue;
+                  }
+
+                  unitProgress.subtopics.forEach((sub: any) => {
+                    if (sub.isCompleted) {
+                      completedSubtopics.push({
+                        unitId,
+                        id: sub.id,
+                        score: sub.score,
+                      });
+                    }
+                  });
+                }
+
+                const lastEight = completedSubtopics.slice().reverse().slice(0, 5);
+
+                if (lastEight.length === 0) {
+                  return <p className="text-gray-500 text-sm italic">No subtopics completed yet</p>;
+                }
+
+                return lastEight.map(({ unitId, id }) => (
+                  <div
+                    key={`${unitId}-${id}`}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <span className="text-sm font-medium capitalize">
+                      Unit {unitId.replace('-', ' › ')} Subtopic {id.replace('-', ' › ')}
+                    </span>
+                    <span className="text-sm text-green-600 font-semibold">Completed</span>
+                  </div>
+                ));
+              })()}
             </div>
           </CardContent>
         </Card>
@@ -146,14 +226,13 @@ export const MainScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
+      <Header
         onHelpClick={() => setShowHelp(true)}
         onSettingsClick={() => setShowSettings(true)}
       />
-      
+
       <div className="flex">
         <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
-        
         <main className="flex-1 p-8">
           {renderContent()}
         </main>

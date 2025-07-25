@@ -1,37 +1,3 @@
-// ==========================
-// ✅ User & Progress Models
-// ==========================
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatar?: string;
-  progress: UserProgress;
-}
-
-export interface UserProgress {
-  currentUnit: string;
-  completedUnits: Record<string, boolean>; 
-  subtopicsProgress: Record<string, SubtopicProgress>; 
-}
-
-export interface SubtopicProgress {
-  completed: boolean;
-  games: Record<string, GameProgress>; 
-}
-
-export interface GameProgress {
-  completed: boolean;
-  score?: number;
-  attempts?: number;
-  completedAt?: string;
-}
-
-// =====================
-// ✅ Grammar Structures
-// =====================
-
 export interface GrammarUnit {
   id: number;
   title: string;
@@ -50,6 +16,7 @@ export interface GrammarSubtopic {
   isLocked: boolean;
   isCompleted: boolean;
   games: Game[];
+  score: number;
 }
 
 export interface Game {
@@ -85,20 +52,3 @@ export type GameType =
   | "listening_multiple_choice"
   | "listening_writing"
   | "speaking_repetition";
-
-// =====================
-// ✅ Auth Context Type
-// =====================
-
-export interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string, name: string) => Promise<boolean>;
-  logout: () => void;
-  updateProgress: (
-    unitId: string,
-    subtopicId: string,
-    gameId: string,
-    progress: GameProgress
-  ) => void;
-}
