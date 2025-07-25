@@ -9,6 +9,7 @@ import {
 import { auth, db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { initializeUserProgress } from '../lib/utils';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 interface AuthContextProps {
   user: User | null;
@@ -16,6 +17,7 @@ interface AuthContextProps {
   register: (email: string, password: string, name: string) => Promise<boolean>;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  resetPassword: (email: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -65,8 +67,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await signOut(auth);
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return true;
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, register, login, logout, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

@@ -13,7 +13,7 @@ interface LoginFormData {
 }
 
 interface LoginFormProps {
-  onToggleMode: () => void;
+  onToggleMode: (mode: 'register' | 'reset') => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
@@ -42,10 +42,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
   };
 
   const inputClass = (error?: boolean) =>
-    `w-full pl-11 pr-4 py-2 border rounded-lg bg-white dark:bg-gray-900 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 transition ${
-      error
-        ? 'border-red-500 focus:ring-red-400'
-        : 'border-gray-300 dark:border-gray-700 focus:ring-[#1ea5b9]'
+    `w-full pl-11 pr-4 py-2 border rounded-lg bg-white dark:bg-gray-900 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 transition ${error
+      ? 'border-red-500 focus:ring-red-400'
+      : 'border-gray-300 dark:border-gray-700 focus:ring-[#1ea5b9]'
     }`;
 
   return (
@@ -110,10 +109,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
             </Button>
           </form>
 
+          <div className="text-center mt-4">
+            <button
+              onClick={() => onToggleMode('reset')}
+              className="text-sm text-[#1ea5b9] hover:underline font-medium"
+            >
+              Forgot your password?
+            </button>
+          </div>
+
           <div className="mt-5 text-center text-sm text-gray-600 dark:text-gray-400">
             Don’t have an account?{' '}
             <button
-              onClick={onToggleMode}
+              onClick={() => onToggleMode('register')}
               className="text-[#1ea5b9] hover:underline font-medium"
             >
               Sign up
