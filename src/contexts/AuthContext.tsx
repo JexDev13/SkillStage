@@ -1,16 +1,13 @@
-// src/contexts/AuthContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  GoogleAuthProvider,
-  signInWithPopup,
   onAuthStateChanged,
   User,
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { initializeUserProgress } from '../lib/utils';
 
 interface AuthContextProps {
@@ -19,7 +16,6 @@ interface AuthContextProps {
   register: (email: string, password: string, name: string) => Promise<boolean>;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  loginWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -69,33 +65,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await signOut(auth);
   };
 
-  const loginWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    const res = await signInWithPopup(auth, provider);
-    const uid = res.user.uid;
-
-    const userDoc = await getDoc(doc(db, 'users', uid));
-    if (!userDoc.exists()) {
-      await setDoc(doc(db, 'users', uid), {
-        name: res.user.displayName,
-        email: res.user.email,
-        createdAt: new Date(),
-      });
-
-      await setDoc(doc(db, 'users', uid, 'user_progress', 'unit_1'), {
-        unitId: '1',
-        isUnitCompleted: false,
-        subtopics: [
-          { id: 'sub_1', isCompleted: false, isLocked: false },
-          { id: 'sub_2', isCompleted: false, isLocked: true },
-          // ...
-        ],
-      });
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, logout, loginWithGoogle }}>
+    <AuthContext.Provider value={{ user, loading, register, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

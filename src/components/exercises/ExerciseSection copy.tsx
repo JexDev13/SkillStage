@@ -86,7 +86,6 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                   games,
                   isLocked: progress.isLocked,
                   isCompleted: progress.isCompleted,
-                  score: progress.score || 0,
                 } as GrammarSubtopic;
               })
             );
@@ -231,7 +230,12 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                           };
 
                           const isSubtopicCompleted = subtopic.isCompleted;
-                          const score = subtopic.score;
+                          const gamesCompleted = subtopic.games.filter((game) => game.completed).length;
+                          const totalGames = subtopic.games.length;
+                          const score =
+                            totalGames > 0
+                              ? Math.round((gamesCompleted / totalGames) * 100)
+                              : undefined;
 
                           return (
                             <Card

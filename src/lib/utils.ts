@@ -17,6 +17,7 @@ export const initializeUserProgress = async (uid: string) => {
         id: subId,
         isCompleted: false,
         isLocked: !(subId === "1.1"), 
+        score: 0,
       };
     });
 
