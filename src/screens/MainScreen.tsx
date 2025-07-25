@@ -9,8 +9,10 @@ import { Card, CardContent } from '../components/ui/card';
 import { Book, GamepadIcon, Trophy, Clock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { Game, GrammarSubtopic } from '../types';
+import { collection, getDocs } from 'firebase/firestore';
+
 
 export const MainScreen: React.FC = () => {
   const { user } = useAuth();
@@ -24,15 +26,35 @@ export const MainScreen: React.FC = () => {
 
   useEffect(() => {
     if (!user) return;
-    const unsub = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
-      if (docSnap.exists()) {
-        setUserData(docSnap.data());
-      }
-      setLoading(false);
-    });
 
-    return () => unsub();
+    const fetchProgress = async () => {
+      setLoading(true);
+      try {
+        const userDocSnap = await getDoc(doc(db, 'users', user.uid));
+        const userInfo = userDocSnap.exists() ? userDocSnap.data() : null;
+
+        const progressSnapshot = await getDocs(collection(db, `users/${user.uid}/user_progress`));
+        const progressData: Record<string, any> = {};
+
+        progressSnapshot.forEach((doc) => {
+          progressData[doc.id] = doc.data();
+        });
+
+        const completedUnits = Object.entries(progressData)
+          .filter(([_, unit]) => unit.isUnitCompleted)
+          .map(([unitId]) => unitId);
+
+        setUserData({ ...userInfo, progress: { ...progressData, completedUnits } });
+      } catch (error) {
+        console.error('Error fetching user progress:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProgress();
   }, [user]);
+
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -49,7 +71,7 @@ export const MainScreen: React.FC = () => {
   if (loading || !userData) {
     return (
       <div className="h-screen flex items-center justify-center text-gray-400 text-xl">
-        Loading your personalized content...
+        Loading content...
       </div>
     );
   }
@@ -107,17 +129,45 @@ export const MainScreen: React.FC = () => {
               Recent Activity
             </h3>
             <div className="space-y-3">
-              {Object.entries(userData?.progress?.exerciseScores || {}).slice(0, 3).map(([exerciseId, score]: any) => (
-                <div key={exerciseId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm font-medium">{exerciseId.replace('-', ' ')}</span>
-                  <span className="text-sm text-[#ff852e] font-semibold">
-                    {Math.round((score.score / score.totalQuestions) * 100)}%
-                  </span>
-                </div>
-              ))}
-              {Object.keys(userData?.progress?.exerciseScores || {}).length === 0 && (
-                <p className="text-gray-500 text-sm italic">No exercises completed yet</p>
-              )}
+              {(() => {
+                const completedSubtopics: { unitId: string; id: any; score: any }[] = [];
+
+                for (const unitId in userData?.progress) {
+                  const unitProgress = userData.progress[unitId];
+
+                  if (!unitProgress?.subtopics) {
+                    continue;
+                  }
+
+                  unitProgress.subtopics.forEach((sub: any) => {
+                    if (sub.isCompleted) {
+                      completedSubtopics.push({
+                        unitId,
+                        id: sub.id,
+                        score: sub.score,
+                      });
+                    }
+                  });
+                }
+
+                const lastEight = completedSubtopics.slice().reverse().slice(0, 5);
+
+                if (lastEight.length === 0) {
+                  return <p className="text-gray-500 text-sm italic">No subtopics completed yet</p>;
+                }
+
+                return lastEight.map(({ unitId, id }) => (
+                  <div
+                    key={`${unitId}-${id}`}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <span className="text-sm font-medium capitalize">
+                      Unit {unitId.replace('-', ' › ')} Subtopic {id.replace('-', ' › ')}
+                    </span>
+                    <span className="text-sm text-green-600 font-semibold">Completed</span>
+                  </div>
+                ));
+              })()}
             </div>
           </CardContent>
         </Card>

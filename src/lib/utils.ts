@@ -10,9 +10,9 @@ export function cn(...inputs: ClassValue[]) {
 export const initializeUserProgress = async (uid: string) => {
   const unitIds = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
-  for (const unitId of unitIds) {
+  for (const id of unitIds) {
     const subtopics = Array.from({ length: 5 }, (_, i) => {
-      const subId = `${unitId}.${i + 1}`;
+      const subId = `${id}.${i + 1}`;
       return {
         id: subId,
         isCompleted: false,
@@ -21,8 +21,8 @@ export const initializeUserProgress = async (uid: string) => {
       };
     });
 
-    await setDoc(doc(db, 'users', uid, 'user_progress', `${unitId}`), {
-      unitId,
+    await setDoc(doc(db, 'users', uid, 'user_progress', `${id}`), {
+      id,
       isUnitCompleted: false,
       subtopics,
     });

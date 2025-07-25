@@ -63,7 +63,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onOpenChan
             <h3 className="text-lg font-semibold text-[#1ea5b9] mb-4">About</h3>
             <div className="p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-700 mb-2">
-                <strong>English Learning Platform</strong>
+                <strong>Skill Stage</strong>
               </p>
               <p className="text-sm text-gray-600">
                 Version 1.0.0 - An interactive platform for learning English grammar and practicing with engaging exercises.

@@ -44,13 +44,13 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
 
         const unitsData: GrammarUnit[] = await Promise.all(
           unitsSnapshot.docs.map(async (unitDoc) => {
-            const unitId = unitDoc.id;
+            const id = unitDoc.id;
             const unitData = unitDoc.data();
 
-            const unitProgress = userProgressMap[unitId];
+            const unitProgress = userProgressMap[id];
 
             const subtopicsSnapshot = await getDocs(
-              collection(db, `grammar_units/${unitId}/subtopics`)
+              collection(db, `grammar_units/${id}/subtopics`)
             );
 
             const subtopics: GrammarSubtopic[] = subtopicsSnapshot.docs.map((subDoc) => {
@@ -70,11 +70,12 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
                 games: subData.games || [],
                 isLocked: progressSub ? progressSub.isLocked : true,
                 isCompleted: progressSub ? progressSub.isCompleted : false,
+                score: progressSub ? progressSub.score : 0
               };
             });
 
             return {
-              id: parseInt(unitId),
+              id: parseInt(id),
               title: unitData.title,
               description: unitData.description,
               isUnitCompleted: unitProgress?.isUnitCompleted ?? false,
