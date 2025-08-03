@@ -323,7 +323,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 	return (
 		<div className="max-w-4xl mx-auto p-6">
 			<div className="mb-4 flex justify-between items-center text-gray-600">
-				<Button variant="ghost" onClick={onBack} className="flex items-center space-x-1 text-[#1ea5b9] hover:bg-[#1ea5b9]/10">
+				<Button tabIndex={0} variant="ghost" onClick={onBack} className="flex items-center space-x-1 text-[#1ea5b9] hover:bg-[#1ea5b9]/10" aria-label="Back to Instructions">
 					<ArrowLeft className="h-4 w-4 mr-2" />
 					<span>Back to Instructions</span>
 				</Button>
@@ -331,7 +331,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 			</div>
 
 			<div className="mb-6 flex items-center justify-between">
-				<div className="text-sm text-gray-600">
+				<div tabIndex={0} aria-label={`Question ${currentIndex + 1} of ${questions.length}`} className="text-sm text-gray-600">
 					Question {currentIndex + 1} of {questions.length}
 				</div>
 				<Progress value={progress} className="h-2 w-2/3" />
@@ -339,26 +339,30 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 
 			<Card className="shadow-lg border-none">
 				<CardContent className="p-8">
-					<h2 className="text-xl font-semibold text-[#1ea5b9] mb-6">
+					<h2 tabIndex={0} aria-label={current.instructions} className="text-xl font-semibold text-[#1ea5b9] mb-6">
 						{current.instructions}
 					</h2>
 
-					{renderGame()}
+					<div tabIndex={0} aria-label={current.instructions}> 
+						{renderGame()}
+					</div>
 
 					{current.isChecked && current.justification && (
-						<div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-							<h4 className="font-medium text-blue-800 mb-2">Explanation:</h4>
-							<p className="text-blue-700">{current.justification}</p>
+						<div tabIndex={0} aria-label={`Explanation: ${current.justification}`} className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+							<h4 tabIndex={0} aria-label="Explanation" className="font-medium text-blue-800 mb-2">Explanation:</h4>
+							<p tabIndex={0} aria-label={current.justification} className="text-blue-700">{current.justification}</p>
 						</div>
 					)}
 
-					<div className="mt-6 flex items-center justify-between">
+					<div  className="mt-6 flex items-center justify-between">
 						<Button
+							tabIndex={0}
 							variant="outline"
 							onClick={previous}
 							disabled={currentIndex === 0}
+							aria-label="Previous Question"
 						>
-							<ChevronLeft className="h-4 w-4 mr-2" />
+							<ChevronLeft  className="h-4 w-4 mr-2" />
 							Previous
 						</Button>
 						<div className="flex gap-3">
@@ -366,8 +370,10 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 								['multiple_choice', 'listening_multiple_choice', 'drag_and_drop', 'listening_writing', 'speaking_repetition'].includes(current.type) &&
 								current.userAnswer && (
 									<Button
+										tabIndex={0}
 										onClick={checkAnswer}
 										className="bg-[#ff852e] hover:bg-[#ff852e]/90"
+										aria-label="Check Answer"
 									>
 										<Check className="h-4 w-4 mr-2" />
 										Check Answer
@@ -375,8 +381,10 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 								)}
 							{current.isChecked && (
 								<Button
+									tabIndex={0}
 									onClick={next}
 									className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90"
+									aria-label={currentIndex === questions.length - 1 ? 'Finish Exercise' : 'Next Question'}
 								>
 									{currentIndex === questions.length - 1 ? 'Finish' : 'Next'}
 									<ChevronRight className="h-4 w-4 ml-2" />

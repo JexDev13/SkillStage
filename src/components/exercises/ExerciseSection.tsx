@@ -141,9 +141,11 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <Button
+            tabIndex={0}
             variant="ghost"
             onClick={onBackToExercises}
             className="text-[#1ea5b9] hover:bg-[#1ea5b9]/10"
+            aria-label="Back to Exercises"
           >
             ← Back to Exercises
           </Button>
@@ -151,25 +153,26 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
 
         <Card className="border-none shadow-lg">
           <CardContent className="p-8 text-center">
-            <div className="mb-6">
-              <Trophy className="h-16 w-16 text-[#ff852e] mx-auto mb-4" />
-              <h1 className="text-3xl font-bold text-[#1ea5b9] mb-2">
+            <div tabIndex={0} aria-label={selectedExercise.title} className="mb-6">
+              <Trophy tabIndex={0} aria-label="Trophy" className="h-16 w-16 text-[#ff852e] mx-auto mb-4" />
+              <h1 tabIndex={0} aria-label={selectedExercise.title} className="text-3xl font-bold text-[#1ea5b9] mb-2">
                 {selectedExercise.title}
               </h1>
-              <p className="text-gray-600 text-lg">{selectedExercise.description}</p>
+              <p tabIndex={0} aria-label={selectedExercise.description} className="text-gray-600 text-lg">{selectedExercise.description}</p>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6 mb-8 text-left">
+            <div tabIndex={0} aria-label="Instructions" className="bg-gray-50 rounded-lg p-6 mb-8 text-left">
               <h3 className="text-lg font-semibold text-[#1ea5b9] mb-4 flex items-center">
                 <Clock className="h-5 w-5 mr-2" />
                 Instructions
               </h3>
-              <p className="text-gray-700 leading-relaxed">
+              <p tabIndex={0} aria-label="Complete all the games in this subtopic to master the subject!" className="text-gray-700 leading-relaxed">
                 Complete all the games in this subtopic to master the subject!
               </p>
             </div>
 
             <Button
+              tabIndex={0}
               onClick={() => setShowInstructions(false)}
               className="bg-[#ff852e] hover:bg-[#ff852e]/90 text-white px-8 py-3 text-lg"
             >
@@ -184,9 +187,9 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-[#1ea5b9] mb-4">Practice Exercises</h1>
-        <p className="text-gray-600">Test your knowledge with interactive exercises</p>
+      <div  className="mb-8 text-center">
+        <h1  tabIndex={0} aria-label="Practice Exercises" className="text-3xl font-bold text-[#1ea5b9] mb-4">Practice Exercises</h1>
+        <p tabIndex={0} aria-label="Test your knowledge with interactive exercises" className="text-gray-600">Test your knowledge with interactive exercises</p>
       </div>
 
       <div className="space-y-4">
@@ -194,7 +197,7 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
           const isUnitLocked = unit.subtopics.every((s: { isLocked: boolean }) => s.isLocked);
 
           return (
-            <Card key={unit.id} className="border-2 hover:border-[#1ea5b9]/30 transition-colors">
+            <Card key={unit.id}  className="border-2 hover:border-[#1ea5b9]/30 transition-colors">
               <CardContent className="p-0">
                 <Accordion
                   type="single"
@@ -203,7 +206,7 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                   onValueChange={setExpandedUnit}
                 >
                   <AccordionItem value={unit.id.toString()} className="border-none">
-                    <AccordionTrigger
+                    <AccordionTrigger 
                       className={`px-6 py-4 hover:no-underline ${isUnitLocked ? 'opacity-50' : ''}`}
                       disabled={isUnitLocked}
                     >
@@ -215,8 +218,8 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                         ) : null}
 
                         <div className="text-left">
-                          <h3 className="text-lg font-semibold text-[#1ea5b9]">{unit.title}</h3>
-                          <p className="text-sm text-gray-600 font-normal">{unit.description}</p>
+                          <h3 tabIndex={0} aria-label={unit.title} className="text-lg font-semibold text-[#1ea5b9]">{unit.title}</h3>
+                          <p tabIndex={0} aria-label={unit.description} className="text-sm text-gray-600 font-normal">{unit.description}</p>
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -238,6 +241,8 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
 
                           return (
                             <Card
+                              tabIndex={0}
+                              aria-label={subtopicExercise.title}
                               key={subtopicExercise.id}
                               className={cn(
                                 'border-2 transition-colors',
@@ -248,32 +253,33 @@ export const ExerciseSection: React.FC<ExerciseSectionProps> = ({
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-start justify-between">
-                                  <h4 className="font-semibold text-[#1ea5b9] mb-1">
+                                  <h4 tabIndex={0} aria-label={subtopicExercise.title} className="font-semibold text-[#1ea5b9] mb-1">
                                     {subtopicExercise.title}
                                   </h4>
                                   {score !== undefined && (
                                     <div className="flex items-center space-x-1 text-sm text-gray-500">
-                                      <Trophy className="h-4 w-4 text-[#ff852e]" />
-                                      <span className="font-medium">{score}%</span>
+                                      <Trophy tabIndex={0} aria-label="Trophy" className="h-4 w-4 text-[#ff852e]" />
+                                      <span tabIndex={0} aria-label={`${score}%`} className="font-medium">{score}%</span>
                                     </div>
                                   )}
                                 </div>
 
                                 <div className="flex items-center justify-between mt-2">
-                                  <span className="text-sm text-gray-500">
+                                  <span tabIndex={0} aria-label={`${subtopicExercise.questions.length} game${subtopicExercise.questions.length !== 1 ? 's' : ''}`} className="text-sm text-gray-500">
                                     {subtopicExercise.questions.length} game
                                     {subtopicExercise.questions.length !== 1 ? 's' : ''}
                                   </span>
 
                                   {subtopicExercise.isLocked ? (
-                                    <Lock className="h-5 w-5 text-gray-400" />
+                                    <Lock tabIndex={0} aria-label="Lock" className="h-5 w-5 text-gray-400" />
                                   ) : (
-                                    <Play className="h-5 w-5 text-[#ff852e]" />
+                                    <Play tabIndex={0} aria-label="Play" className="h-5 w-5 text-[#ff852e]" />
                                   )}
                                 </div>
 
                                 {!subtopicExercise.isLocked && (
                                   <Button
+                                    tabIndex={0}
                                     variant="outline"
                                     size="sm"
                                     className="w-full mt-4 border-[#ff852e] text-[#ff852e] hover:bg-[#ff852e] hover:text-white"

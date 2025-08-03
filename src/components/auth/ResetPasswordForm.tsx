@@ -44,19 +44,23 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onToggleMo
       <Card className="w-full max-w-md shadow-2xl rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
         <CardHeader className="text-center space-y-2 pt-6">
           <img
+            tabIndex={0}
             src="/img/SKILLSTAGE.svg"
             alt="SkillStage Logo"
             className="mx-auto h-10 w-auto dark:invert"
           />
-          <h2 className="text-2xl font-semibold text-[#1ea5b9]">Reset Password</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">We'll send you instructions by email</p>
+          <h2 tabIndex={0} className="text-2xl font-semibold text-[#1ea5b9]">Reset Password</h2>
+          <p tabIndex={0} className="text-sm text-gray-600 dark:text-gray-400">We'll send you instructions by email</p>
         </CardHeader>
 
         <CardContent className="px-6 pb-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="relative">
+              <label htmlFor="email" className="sr-only">Email</label>
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <Input
+                tabIndex={0}
+                id="email"
                 type="email"
                 placeholder="Email"
                 className={inputClass(!!errors.email)}
@@ -74,6 +78,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onToggleMo
             </div>
 
             <Button
+              tabIndex={0}
               type="submit"
               className="w-full bg-[#1ea5b9] hover:bg-[#1a8fa0] text-white font-semibold py-2 rounded-lg"
             >
@@ -81,9 +86,10 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onToggleMo
             </Button>
           </form>
 
-          <div className="mt-5 text-center text-sm text-gray-600 dark:text-gray-400">
+          <div tabIndex={0} aria-label="Remembered your password?" className="mt-5 text-center text-sm text-gray-600 dark:text-gray-400">
             Remembered your password?{' '}
             <button
+              tabIndex={0}
               onClick={() => onToggleMode('login')}
               className="text-[#1ea5b9] hover:underline font-medium"
             >
