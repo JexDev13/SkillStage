@@ -116,9 +116,11 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <Button
+            tabIndex={0}
             variant="ghost"
             onClick={onBackToUnits}
             className="text-[#1ea5b9] hover:bg-[#1ea5b9]/10"
+            aria-label="Back to Units"
           >
             ← Back to Units
           </Button>
@@ -127,7 +129,7 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
         <Card className="border-none shadow-lg">
           <CardContent className="p-8">
             <div className="flex items-center justify-between mb-6">
-              <div>
+              <div tabIndex={0} aria-label={selectedTopic.title}>
                 <h1 className="text-3xl font-bold text-[#1ea5b9] mb-2">
                   {selectedTopic.title.toUpperCase()}
                 </h1>
@@ -135,27 +137,27 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
               </div>
 
               {selectedTopic.image && (
-                <div className="hidden lg:block">
+                <div tabIndex={0} aria-label="Grammar illustration" className="hidden lg:block">
                   <img
                     src={selectedTopic.image}
-                    alt="Grammar illustration"
+                    alt="Chart of Present Perfect tense: affirmative, negative, and questions with have/has and past participle"
                     className="w-64 h-64 object-contain"
                   />
                 </div>
               )}
             </div>
 
-            <div className="prose max-w-none text-gray-700 leading-relaxed space-y-4">
+            <div tabIndex={0} aria-label={`Description: ${selectedTopic.description}. Usage: ${selectedTopic.usage}`} className="prose max-w-none text-gray-700 leading-relaxed space-y-4">
               <p><strong>Description:</strong> {selectedTopic.description}</p>
               <p><strong>Usage:</strong> {selectedTopic.usage}</p>
             </div>
 
             {(selectedTopic.examples?.length ?? 0) > 0 && (
-              <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+              <div tabIndex={0} aria-label="Examples" className="mt-8 p-6 bg-gray-50 rounded-lg">
                 <h3 className="text-lg font-semibold text-[#1ea5b9] mb-4">Examples:</h3>
                 <ul className="space-y-2">
                   {selectedTopic.examples?.map((example, index) => (
-                    <li key={index} className="flex items-center space-x-2">
+                    <li key={index} tabIndex={0} aria-label={example} className="flex items-center space-x-2">
                       <ChevronRight className="h-4 w-4 text-[#ff852e]" />
                       <span className="italic">{example}</span>
                     </li>
@@ -171,9 +173,9 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-[#1ea5b9] mb-4">Grammar Units</h1>
-        <p className="text-gray-600">Select a unit to explore grammar topics</p>
+      <div  className="mb-8 text-center">
+        <h1  tabIndex={0} aria-label="Grammar Units"className="text-3xl font-bold text-[#1ea5b9] mb-4">Grammar Units</h1>
+        <p tabIndex={0} aria-label="Select a unit to explore grammar topics" className="text-gray-600">Select a unit to explore grammar topics</p>
       </div>
 
       <div className="space-y-4">
@@ -183,9 +185,10 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
           return (
             <Card
               key={unit.id}
+              aria-label={unit.title}
               className="border-2 hover:border-[#1ea5b9]/30 transition-colors"
             >
-              <CardContent className="p-0">
+              <CardContent  className="p-0">
                 <Accordion
                   type="single"
                   collapsible
@@ -205,8 +208,8 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
                         ) : null}
 
                         <div className="text-left">
-                          <h3 className="text-lg font-semibold text-[#1ea5b9]">{unit.title}</h3>
-                          <p className="text-sm text-gray-600 font-normal">{unit.description}</p>
+                          <h3 tabIndex={0} aria-label={unit.title} className="text-lg font-semibold text-[#1ea5b9]">{unit.title}</h3>
+                          <p tabIndex={0} aria-label={unit.description} className="text-sm text-gray-600 font-normal">{unit.description}</p>
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -216,6 +219,7 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
                         <div className="space-y-2">
                           {unit.subtopics.map((topic) => (
                             <Button
+                              aria-label={topic.title}
                               key={topic.id}
                               variant="ghost"
                               onClick={() => {
@@ -234,11 +238,11 @@ export const GrammarSection: React.FC<GrammarSectionProps> = ({
                               ) : topic.isLocked ? (
                                 <Lock className="h-4 w-4 text-gray-400 flex-shrink-0" />
                               ) : null}
-                              <span className="font-medium text-[#1ea5b9]">{topic.title}</span>
+                              <span tabIndex={0} aria-label={topic.title} className="font-medium text-[#1ea5b9]">{topic.title}</span>
                             </Button>
                           ))}
                           {unit.subtopics.length === 0 && (
-                            <p className="text-gray-500 italic py-2">No topics available yet</p>
+                            <p tabIndex={0} aria-label="No topics available yet" className="text-gray-500 italic py-2">No topics available yet</p>
                           )}
                         </div>
                       </AccordionContent>

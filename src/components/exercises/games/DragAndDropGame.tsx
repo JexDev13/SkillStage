@@ -3,6 +3,7 @@ import {
     DndContext,
     closestCenter,
     PointerSensor,
+    KeyboardSensor,
     useSensor,
     useSensors,
     DragEndEvent,
@@ -65,7 +66,7 @@ const SortableItem: React.FC<SortableItemProps> = ({ id, text, disabled }) => {
         transform: CSS.Transform.toString(transform),
         transition,
         cursor: disabled ? 'default' : 'grab',
-        opacity: disabled ? 0.5 : 1,
+        opacity: isDragging ? 0 : (disabled ? 0.5 : 1),
         padding: '8px 12px',
         borderRadius: 4,
         boxShadow: isDragging ? '0 2px 8px rgba(0,0,0,0.2)' : undefined,
@@ -116,6 +117,13 @@ const BlankSlot: React.FC<BlankSlotProps> = ({ id, assignedOption, onRemove, isA
         backgroundColor = '#dbeafe';
     }
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (assignedOption && !disabled && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onRemove();
+        }
+    };
+
     return (
         <div
             ref={setNodeRef}
@@ -136,7 +144,15 @@ const BlankSlot: React.FC<BlankSlotProps> = ({ id, assignedOption, onRemove, isA
             onClick={() => {
                 if (assignedOption && !disabled) onRemove();
             }}
-            title={assignedOption ? 'Click to remove' : undefined}
+            onKeyDown={handleKeyDown}
+            tabIndex={assignedOption && !disabled ? 0 : -1}
+            role="button"
+            aria-label={
+                assignedOption
+                    ? `Placed option: ${assignedOption.text}. Press Enter or Space to remove.`
+                    : 'Empty blank slot'
+            }
+            title={assignedOption ? 'Click or press Enter/Space to remove' : undefined}
         >
             {assignedOption ? (
                 <span style={{ color: '#111' }}>{assignedOption.text}</span>
@@ -156,6 +172,39 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
     const [assigned, setAssigned] = useState<(OptionItem | null)[]>([]);
     const previousGameIdRef = useRef<string | null>(null);
     const [activeId, setActiveId] = useState<string | null>(null);
+
+    const optionsContainerRef = useRef<HTMLDivElement>(null);
+
+    const handleOptionsKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (activeId) return;
+
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+            return;
+        }
+
+        e.preventDefault();
+
+        const items = Array.from(
+            optionsContainerRef.current?.querySelectorAll<HTMLElement>('[role="button"]') ?? []
+        );
+
+        const activeElement = document.activeElement as HTMLElement;
+        const currentIndex = items.findIndex(item => item === activeElement);
+
+        if (currentIndex === -1) {
+            items[0]?.focus();
+            return;
+        }
+
+        let nextIndex;
+        if (e.key === 'ArrowRight') {
+            nextIndex = (currentIndex + 1) % items.length;
+        } else { // ArrowLeft
+            nextIndex = (currentIndex - 1 + items.length) % items.length;
+        }
+
+        items[nextIndex]?.focus();
+    };
 
     useEffect(() => {
         if (previousGameIdRef.current !== question.game_id) {
@@ -189,7 +238,7 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
     }, [question]);
 
 
-    const sensors = useSensors(useSensor(PointerSensor));
+    const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
     const isCorrect = question.isChecked
         ? assigned.every(
             (opt, i) => opt?.text === question.blanks[i]?.correct_answer
@@ -315,7 +364,11 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
                     items={options.map((o) => o.id)}
                     strategy={horizontalListSortingStrategy}
                 >
-                    <div className="flex flex-wrap gap-3 p-4 border rounded bg-gray-50 min-h-[60px]">
+                    <div 
+                        ref={optionsContainerRef} 
+                        onKeyDown={handleOptionsKeyDown}
+                        className="flex flex-wrap gap-3 p-4 border rounded bg-gray-50 min-h-[60px]"
+                    >
                         {options.map((option) => (
                             <SortableItem
                                 key={option.id}

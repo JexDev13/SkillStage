@@ -61,22 +61,22 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ open, onOpenChange }) =>
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2 text-[#ff852e]">
             <HelpCircle className="h-6 w-6" />
-            <span>Help & Support</span>
+            <span tabIndex={0} aria-label="Help & Support">Help & Support</span>
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-8">
           {/* Quick Tips */}
           <div>
-            <h3 className="text-lg font-semibold text-[#1ea5b9] mb-4">Quick Tips</h3>
+            <h3 tabIndex={0} aria-label="Quick Tips" className="text-lg font-semibold text-[#1ea5b9] mb-4">Quick Tips</h3>
             <div className="grid gap-4 md:grid-cols-3">
               {tips.map((tip, index) => {
                 const Icon = tip.icon;
                 return (
                   <div key={index} className="p-4 border rounded-lg bg-gray-50">
-                    <Icon className="h-8 w-8 text-[#ff852e] mb-2" />
-                    <h4 className="font-medium text-[#1ea5b9] mb-2">{tip.title}</h4>
-                    <p className="text-sm text-gray-600">{tip.description}</p>
+                    <Icon tabIndex={0} aria-label={tip.title} className="h-8 w-8 text-[#ff852e] mb-2" />
+                    <h4 tabIndex={0} aria-label={tip.title} className="font-medium text-[#1ea5b9] mb-2">{tip.title}</h4>
+                    <p tabIndex={0} aria-label={tip.description} className="text-sm text-gray-600">{tip.description}</p>
                   </div>
                 );
               })}
@@ -85,25 +85,25 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ open, onOpenChange }) =>
 
           {/* FAQs */}
           <div>
-            <h3 className="text-lg font-semibold text-[#1ea5b9] mb-4">Frequently Asked Questions</h3>
-            <Accordion type="single" collapsible className="space-y-2">
+            <h3 tabIndex={0} aria-label="Frequently Asked Questions" className="text-lg font-semibold text-[#1ea5b9] mb-4">Frequently Asked Questions</h3>
+            <Accordion tabIndex={0}  type="single" collapsible className="space-y-2">
               {faqs.map((faq) => (
                 <AccordionItem key={faq.id} value={faq.id} className="border rounded-lg px-4">
                   <AccordionTrigger className="text-left hover:no-underline">
-                    <span className="font-medium text-[#1ea5b9]">{faq.question}</span>
+                    <span  className="font-medium text-[#1ea5b9]">{faq.question}</span>
                   </AccordionTrigger>
-                  <AccordionContent className="text-gray-700 pb-4">
-                    {faq.answer}
+                  <AccordionContent  className="text-gray-700 pb-4">
+                    <span tabIndex={0} aria-label={faq.answer} > {faq.answer} </span>
                   </AccordionContent>
                 </AccordionItem>
               ))}
-            </Accordion>
+            </Accordion>  
           </div>
 
           {/* Contact Info */}
           <div className="p-4 bg-[#1ea5b9]/10 rounded-lg">
-            <h3 className="text-lg font-semibold text-[#1ea5b9] mb-2">Need More Help?</h3>
-            <p className="text-gray-700">
+            <h3 tabIndex={0} aria-label="Need More Help?" className="text-lg font-semibold text-[#1ea5b9] mb-2">Need More Help?</h3>
+            <p tabIndex={0} aria-label="If you have questions not covered here, feel free to reach out to our support team. We're here to help you succeed in your English learning journey!" className="text-gray-700">
               If you have questions not covered here, feel free to reach out to our support team. 
               We're here to help you succeed in your English learning journey!
             </p>

@@ -52,12 +52,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
       <Card className="w-full max-w-md shadow-2xl rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
         <CardHeader className="text-center space-y-2 pt-6">
           <img
+            tabIndex={0}
             src="/img/SKILLSTAGE.svg"
             alt="SkillStage Logo"
             className="mx-auto h-10 w-auto dark:invert"
           />
-          <h2 className="text-2xl font-semibold text-[#1ea5b9] dark:text-[#1ea5b9]">Welcome Back</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Sign in to continue learning</p>
+          <h2 tabIndex={0} className="text-2xl font-semibold text-[#1ea5b9] dark:text-[#1ea5b9]">Welcome Back</h2>
+          <p tabIndex={0} className="text-sm text-gray-600 dark:text-gray-400">Sign in to continue learning</p>
         </CardHeader>
 
         <CardContent className="px-6 pb-6">
@@ -80,13 +81,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
           </div>
           <div className="flex items-center my-6">
             <hr className="flex-grow border-t border-gray-300 dark:border-gray-700" />
-            <span className="px-4 text-sm text-gray-500 dark:text-gray-400 font-medium">OR</span>
+            <span tabIndex={0} aria-label="OR" className="px-4 text-sm text-gray-500 dark:text-gray-400 font-medium">OR</span>
             <hr className="flex-grow border-t border-gray-300 dark:border-gray-700" />
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="relative">
+              <label htmlFor="email" className="sr-only">Email</label>
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <Input
+                id="email"
                 type="email"
                 placeholder="Email"
                 className={inputClass(!!errors.email)}
@@ -104,8 +107,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
             </div>
 
             <div className="relative">
+              <label htmlFor="password" className="sr-only">Password</label>
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <Input
+                id="password"
                 type="password"
                 placeholder="Password"
                 className={inputClass(!!errors.password)}
@@ -133,6 +138,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
 
           <div className="text-center mt-4">
             <button
+            tabIndex={0} aria-label="Forgot your password?"
               onClick={() => onToggleMode('reset')}
               className="text-sm text-[#1ea5b9] hover:underline font-medium"
             >
@@ -140,7 +146,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
             </button>
           </div>
 
-          <div className="mt-5 text-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-5 text-center text-sm text-gray-600 dark:text-gray-400" tabIndex={0} aria-label="Don't have an account?">
             Don’t have an account?{' '}
             <button
               onClick={() => onToggleMode('register')}

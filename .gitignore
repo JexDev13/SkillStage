@@ -23,8 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 src/firebase.ts
-.env
 dist
 .firebase/hosting.ZGlzdA.cache
 .firebaserc
-firebase.json
+.env

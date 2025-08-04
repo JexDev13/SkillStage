@@ -79,10 +79,10 @@ export const MainScreen: React.FC = () => {
   const renderHomeContent = () => (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-[#1ea5b9] mb-4">
+        <h1 tabIndex={0}  className="text-3xl font-bold text-[#1ea5b9] mb-4">
           Welcome back, {userData?.name || 'Student'}!
         </h1>
-        <p className="text-gray-600 text-lg">
+        <p tabIndex={0} aria-label="Continue your English learning journey" className="text-gray-600 text-lg">
           Continue your English learning journey
         </p>
       </div>
@@ -91,9 +91,9 @@ export const MainScreen: React.FC = () => {
         <Card className="border-2 border-[#1ea5b9]/20 hover:border-[#1ea5b9]/40 transition-colors cursor-pointer"
           onClick={() => setActiveTab('grammar')}>
           <CardContent className="p-6 text-center">
-            <Book className="h-12 w-12 text-[#d43241] mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-[#1ea5b9] mb-2">Grammar Theory</h3>
-            <p className="text-gray-600 text-sm">
+            <Book tabIndex={0} aria-label="Book" className="h-12 w-12 text-[#d43241] mx-auto mb-4" />
+            <h3 tabIndex={0} aria-label="Grammar Theory" className="text-lg font-semibold text-[#1ea5b9] mb-2">Grammar Theory</h3>
+            <p tabIndex={0} aria-label="Learn grammar rules and concepts with detailed explanations" className="text-gray-600 text-sm">
               Learn grammar rules and concepts with detailed explanations
             </p>
           </CardContent>
@@ -102,9 +102,9 @@ export const MainScreen: React.FC = () => {
         <Card className="border-2 border-[#ff852e]/20 hover:border-[#ff852e]/40 transition-colors cursor-pointer"
           onClick={() => setActiveTab('exercises')}>
           <CardContent className="p-6 text-center">
-            <GamepadIcon className="h-12 w-12 text-[#ff852e] mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-[#1ea5b9] mb-2">Practice Exercises</h3>
-            <p className="text-gray-600 text-sm">
+            <GamepadIcon tabIndex={0} aria-label="Gamepad Icon" className="h-12 w-12 text-[#ff852e] mx-auto mb-4" />
+            <h3 tabIndex={0} aria-label="Practice Exercises" className="text-lg font-semibold text-[#1ea5b9] mb-2">Practice Exercises</h3>
+            <p tabIndex={0} aria-label="Test your knowledge with interactive quizzes and activities" className="text-gray-600 text-sm">
               Test your knowledge with interactive quizzes and activities
             </p>
           </CardContent>
@@ -112,9 +112,9 @@ export const MainScreen: React.FC = () => {
 
         <Card className="border-2 border-[#463675]/20 hover:border-[#463675]/40 transition-colors">
           <CardContent className="p-6 text-center">
-            <Trophy className="h-12 w-12 text-[#463675] mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-[#1ea5b9] mb-2">Your Progress</h3>
-            <p className="text-gray-600 text-sm">
+            <Trophy tabIndex={0} aria-label="Trophy" className="h-12 w-12 text-[#463675] mx-auto mb-4" />
+            <h3 tabIndex={0} aria-label="Your Progress" className="text-lg font-semibold text-[#1ea5b9] mb-2">Your Progress</h3>
+            <p tabIndex={0} aria-label="Units completed" className="text-gray-600 text-sm">
               Units completed: {userData?.progress?.completedUnits?.length || 0}
             </p>
           </CardContent>
@@ -124,7 +124,7 @@ export const MainScreen: React.FC = () => {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-[#1ea5b9] mb-4 flex items-center">
+            <h3 tabIndex={0} aria-label="Recent Activity" className="text-lg font-semibold text-[#1ea5b9] mb-4 flex items-center">
               <Clock className="h-5 w-5 mr-2" />
               Recent Activity
             </h3>
@@ -153,7 +153,7 @@ export const MainScreen: React.FC = () => {
                 const lastEight = completedSubtopics.slice().reverse().slice(0, 5);
 
                 if (lastEight.length === 0) {
-                  return <p className="text-gray-500 text-sm italic">No subtopics completed yet</p>;
+                  return <p tabIndex={0} aria-label="No subtopics completed yet" className="text-gray-500 text-sm italic">No subtopics completed yet</p>;
                 }
 
                 return lastEight.map(({ unitId, id }) => (
@@ -174,7 +174,7 @@ export const MainScreen: React.FC = () => {
 
         <Card>
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-[#1ea5b9] mb-4">Quick Actions</h3>
+            <h3 tabIndex={0} aria-label="Quick Actions" className="text-lg font-semibold text-[#1ea5b9] mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <button
                 onClick={() => setActiveTab('grammar')}
