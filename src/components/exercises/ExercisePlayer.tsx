@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { ArrowLeft, ChevronLeft, ChevronRight, Check } from 'lucide-react';
@@ -49,6 +49,8 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 	);
 	const [finalTime, setFinalTime] = useState(0);
 	const [showResults, setShowResults] = useState(false);
+	const explanationRef = useRef<HTMLDivElement>(null);
+	const nextButtonRef = useRef<HTMLButtonElement>(null);
 
 	const current = questions[currentIndex];
 	const progress = ((currentIndex + 1) / questions.length) * 100;
@@ -112,6 +114,17 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 		setQuestions(updated);
 
 		toast[correct ? 'success' : 'error'](correct ? 'Correct!' : 'Incorrect.');
+		
+		setTimeout(() => {
+			
+			if (current.type !== 'listening_writing') {
+				if (updated[currentIndex].justification && explanationRef.current) {
+					explanationRef.current.focus();
+				} else if (nextButtonRef.current) {
+					nextButtonRef.current.focus();
+				}
+			}
+		}, 100);
 	};
 
 	const next = () => {
@@ -348,9 +361,14 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 					</div>
 
 					{current.isChecked && current.justification && (
-						<div tabIndex={0} aria-label={`Explanation: ${current.justification}`} className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-							<h4 tabIndex={0} aria-label="Explanation" className="font-medium text-blue-800 mb-2">Explanation:</h4>
-							<p tabIndex={0} aria-label={current.justification} className="text-blue-700">{current.justification}</p>
+						<div
+							ref={explanationRef}
+							tabIndex={0}
+							aria-label={`Explanation: ${current.justification}`}
+							className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+						>
+							<h4  className="font-medium text-blue-800 mb-2">Explanation:</h4>
+							<p  className="text-blue-700">{current.justification}</p>
 						</div>
 					)}
 
@@ -381,6 +399,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 								)}
 							{current.isChecked && (
 								<Button
+									ref={nextButtonRef}
 									tabIndex={0}
 									onClick={next}
 									className="bg-[#1ea5b9] hover:bg-[#1ea5b9]/90"

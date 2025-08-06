@@ -59,7 +59,7 @@ const ListeningMultipleChoiceGame: React.FC<ListeningMultipleChoiceGameProps> = 
 
     return (
         <div className="space-y-6 text-center">
-            <span className="text-base font-semibold text-[#1ea5b9] block mb-2">
+            <span tabIndex={0} aria-label="Listen and choose the correct sentence:" className="text-base font-semibold text-[#1ea5b9] block mb-2">
                 Listen and choose the correct sentence:
             </span>
 

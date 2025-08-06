@@ -22,16 +22,16 @@ const MultipleChoiceGame: React.FC<MultipleChoiceGameProps> = ({
         <div className="space-y-6">
 
             <div className="mb-2">
-                <h2 className="text-base font-semibold text-[#1ea5b9]">
+                <h2 tabIndex={0} aria-label="Complete the sentence with the correct option:" className="text-base font-semibold text-[#1ea5b9]">
                     Complete the sentence with the correct option:
                 </h2>
             </div>
 
-            {question.question && (
-                <p className="text-lg text-gray-800 leading-relaxed">
-                    {question.question}
-                </p>
-            )}
+                {question.question && (
+                    <p tabIndex={0} aria-label={question.question} className="text-lg text-gray-800 leading-relaxed">
+                        {question.question}
+                    </p>
+                )}
 
             <div className="space-y-3">
                 {question.options.map((opt, idx) => {
