@@ -10,6 +10,7 @@ import {
     UniqueIdentifier,
     useDroppable,
     DragOverlay,
+    TouchSensor
 } from '@dnd-kit/core';
 import {
     SortableContext,
@@ -75,6 +76,7 @@ const SortableItem: React.FC<SortableItemProps> = ({ id, text, disabled }) => {
         fontSize: '0.875rem',
         fontWeight: 500,
         color: '#333',
+        touchAction: 'none',
     };
 
     return (
@@ -247,7 +249,7 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
         let nextIndex;
         if (e.key === 'ArrowRight') {
             nextIndex = (currentIndex + 1) % items.length;
-        } else { 
+        } else {
             nextIndex = (currentIndex - 1 + items.length) % items.length;
         }
 
@@ -261,10 +263,10 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
             const filledSlotsIndexes = assigned
                 .map((slot, index) => (slot ? index : -1))
                 .filter(index => index !== -1);
-    
-       
+
+
             if (filledSlotsIndexes.length > 0) {
-                e.preventDefault(); 
+                e.preventDefault();
                 blankRefs.current[filledSlotsIndexes[0]]?.focus();
             }
         }
@@ -272,41 +274,41 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
 
 
     const handleBlankKeyDown = (e: React.KeyboardEvent, idx: number) => {
-        if (e.key !== 'Tab') return; 
-    
-   
+        if (e.key !== 'Tab') return;
+
+
         const filledSlotsIndexes = assigned
             .map((slot, index) => (slot ? index : -1))
             .filter(index => index !== -1);
-    
+
 
         const currentPosition = filledSlotsIndexes.indexOf(idx);
-    
-        if (!e.shiftKey) { 
-            e.preventDefault(); 
-    
+
+        if (!e.shiftKey) {
+            e.preventDefault();
+
             if (currentPosition < filledSlotsIndexes.length - 1) {
                 const nextSlotIndex = filledSlotsIndexes[currentPosition + 1];
                 blankRefs.current[nextSlotIndex]?.focus();
             } else {
-                
+
                 optionsContainerRef.current?.focus();
             }
-        } else { 
+        } else {
             e.preventDefault();
-    
-          
+
+
             if (currentPosition > 0) {
                 const prevSlotIndex = filledSlotsIndexes[currentPosition - 1];
                 blankRefs.current[prevSlotIndex]?.focus();
             } else {
-            
+
                 sentenceRef.current?.focus();
             }
         }
     };
 
- 
+
     useEffect(() => {
         if (previousGameIdRef.current !== question.game_id) {
             const newOptions = question.draggable_options.map((word, index) => ({
@@ -335,12 +337,19 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
                 setAssigned(Array(blankCount).fill(null));
             }
             previousGameIdRef.current = question.game_id;
-          
+
         }
     }, [question]);
 
-
-    const sensors = useSensors(useSensor(PointerSensor));
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 50,
+                tolerance: 10,
+            },
+        })
+    );
     const isCorrect = question.isChecked
         ? assigned.every(
             (opt, i) => opt?.text === question.blanks[i]?.correct_answer
@@ -445,7 +454,7 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
             <h2 tabIndex={0} aria-label="Drag the options to the correct blanks:" className="text-base font-semibold text-[#1ea5b9] flex items-center gap-2">
                 Drag the options to the correct blanks:
             </h2>
-            
+
 
             <DndContext
                 sensors={sensors}
@@ -454,20 +463,20 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
                 onDragStart={handleDragStart}
             >
                 <div
-                ref={sentenceRef}
-                tabIndex={0}
-                aria-label={getSentenceAriaLabel()}
-                className="text-lg text-gray-800 leading-relaxed flex flex-wrap items-center gap-2 mb-4 outline-none"
-                
-            >
-                {partsRendered}
-                {question.isChecked &&
-                    (isCorrect ? (
-                        <Check className="text-green-500 w-5 h-5" />
-                    ) : (
-                        <X className="text-red-500 w-5 h-5" />
-                    ))}
-            </div>
+                    ref={sentenceRef}
+                    tabIndex={0}
+                    aria-label={getSentenceAriaLabel()}
+                    className="text-lg text-gray-800 leading-relaxed flex flex-wrap items-center gap-2 mb-4 outline-none"
+
+                >
+                    {partsRendered}
+                    {question.isChecked &&
+                        (isCorrect ? (
+                            <Check className="text-green-500 w-5 h-5" />
+                        ) : (
+                            <X className="text-red-500 w-5 h-5" />
+                        ))}
+                </div>
 
                 <h3 tabIndex={0} aria-label="Options" className="text-sm font-medium text-gray-600 mb-2">Options:</h3>
 
