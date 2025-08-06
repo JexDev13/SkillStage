@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { ArrowLeft, ChevronLeft, ChevronRight, Check } from 'lucide-react';
@@ -69,6 +69,8 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 		setQuestions(updated);
 	};
 
+	const questionRef = useRef<HTMLHeadingElement>(null);
+
 	function normalize(str: string): string {
 		return str
 			.trim()
@@ -114,9 +116,9 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 		setQuestions(updated);
 
 		toast[correct ? 'success' : 'error'](correct ? 'Correct!' : 'Incorrect.');
-		
+
 		setTimeout(() => {
-			
+
 			if (current.type !== 'listening_writing') {
 				if (updated[currentIndex].justification && explanationRef.current) {
 					explanationRef.current.focus();
@@ -126,6 +128,10 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 			}
 		}, 100);
 	};
+
+	useEffect(() => {
+		questionRef.current?.focus();
+	}, [currentIndex]);
 
 	const next = () => {
 		if (
@@ -344,7 +350,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 			</div>
 
 			<div className="mb-6 flex items-center justify-between">
-				<div tabIndex={0} aria-label={`Question ${currentIndex + 1} of ${questions.length}`} className="text-sm text-gray-600">
+				<div ref={questionRef} tabIndex={-1} aria-label={`Question ${currentIndex + 1} of ${questions.length}`} className="text-sm text-gray-600">
 					Question {currentIndex + 1} of {questions.length}
 				</div>
 				<Progress value={progress} className="h-2 w-2/3" />
@@ -356,7 +362,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 						{current.instructions}
 					</h2>
 
-					<div tabIndex={0} aria-label={current.instructions}> 
+					<div tabIndex={0} aria-label={current.instructions}>
 						{renderGame()}
 					</div>
 
@@ -367,12 +373,12 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 							aria-label={`Explanation: ${current.justification}`}
 							className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"
 						>
-							<h4  className="font-medium text-blue-800 mb-2">Explanation:</h4>
-							<p  className="text-blue-700">{current.justification}</p>
+							<h4 className="font-medium text-blue-800 mb-2">Explanation:</h4>
+							<p className="text-blue-700">{current.justification}</p>
 						</div>
 					)}
 
-					<div  className="mt-6 flex items-center justify-between">
+					<div className="mt-6 flex items-center justify-between">
 						<Button
 							tabIndex={0}
 							variant="outline"
@@ -380,7 +386,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 							disabled={currentIndex === 0}
 							aria-label="Previous Question"
 						>
-							<ChevronLeft  className="h-4 w-4 mr-2" />
+							<ChevronLeft className="h-4 w-4 mr-2" />
 							Previous
 						</Button>
 						<div className="flex gap-3">
