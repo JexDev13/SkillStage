@@ -194,7 +194,7 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
                 const assignedOption = assigned[blankIdx];
                 const label = assignedOption ? assignedOption.text : 'vacío';
                 blankIdx++;
-                return ` espacio ${blankIdx}: ${label} `;
+                return ` espace ${blankIdx}: ${label} `;
             } else {
                 return part;
             }
@@ -466,8 +466,9 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
                     ref={sentenceRef}
                     tabIndex={0}
                     aria-label={getSentenceAriaLabel()}
+                    aria-live="polite"
+                    key={assigned.map(opt => opt?.text || '').join('_')}
                     className="text-lg text-gray-800 leading-relaxed flex flex-wrap items-center gap-2 mb-4 outline-none"
-
                 >
                     {partsRendered}
                     {question.isChecked &&
