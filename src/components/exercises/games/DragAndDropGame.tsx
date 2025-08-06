@@ -3,7 +3,6 @@ import {
     DndContext,
     closestCenter,
     PointerSensor,
-    KeyboardSensor,
     useSensor,
     useSensors,
     DragEndEvent,
@@ -11,6 +10,7 @@ import {
     UniqueIdentifier,
     useDroppable,
     DragOverlay,
+    TouchSensor
 } from '@dnd-kit/core';
 import {
     SortableContext,
@@ -76,6 +76,7 @@ const SortableItem: React.FC<SortableItemProps> = ({ id, text, disabled }) => {
         fontSize: '0.875rem',
         fontWeight: 500,
         color: '#333',
+        touchAction: 'none',
     };
 
     return (
@@ -92,9 +93,11 @@ interface BlankSlotProps {
     isActive: boolean;
     status: 'correct' | 'incorrect' | 'neutral';
     disabled?: boolean;
+    innerRef?: React.Ref<HTMLDivElement>;
+    onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
-const BlankSlot: React.FC<BlankSlotProps> = ({ id, assignedOption, onRemove, isActive, status, disabled }) => {
+const BlankSlot: React.FC<BlankSlotProps> = ({ id, assignedOption, onRemove, isActive, status, disabled, innerRef, onKeyDown }) => {
     const { isOver, setNodeRef } = useDroppable({
         id,
         data: {
@@ -126,7 +129,13 @@ const BlankSlot: React.FC<BlankSlotProps> = ({ id, assignedOption, onRemove, isA
 
     return (
         <div
-            ref={setNodeRef}
+            ref={el => {
+                setNodeRef(el);
+                if (innerRef) {
+                    if (typeof innerRef === 'function') innerRef(el);
+                    else (innerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+                }
+            }}
             style={{
                 minWidth: 100,
                 minHeight: 40,
@@ -144,7 +153,7 @@ const BlankSlot: React.FC<BlankSlotProps> = ({ id, assignedOption, onRemove, isA
             onClick={() => {
                 if (assignedOption && !disabled) onRemove();
             }}
-            onKeyDown={handleKeyDown}
+            onKeyDown={onKeyDown}
             tabIndex={assignedOption && !disabled ? 0 : -1}
             role="button"
             aria-label={
@@ -173,10 +182,51 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
     const previousGameIdRef = useRef<string | null>(null);
     const [activeId, setActiveId] = useState<string | null>(null);
 
+    const questionRef = useRef<HTMLDivElement>(null);
+    const blankRefs = useRef<Array<HTMLDivElement | null>>([]);
     const optionsContainerRef = useRef<HTMLDivElement>(null);
+    const sentenceRef = useRef<HTMLDivElement>(null);
+
+    const getSentenceAriaLabel = () => {
+        let blankIdx = 0;
+        return question.question.split(/(___)/g).map((part) => {
+            if (part === '___') {
+                const assignedOption = assigned[blankIdx];
+                const label = assignedOption ? assignedOption.text : 'vacío';
+                blankIdx++;
+                return ` espacio ${blankIdx}: ${label} `;
+            } else {
+                return part;
+            }
+        }).join('');
+    };
 
     const handleOptionsKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
         if (activeId) return;
+        if ((e.key === 'Enter' || e.key === ' ') && document.activeElement) {
+            const items = Array.from(
+                optionsContainerRef.current?.querySelectorAll<HTMLElement>('[role="button"]') ?? []
+            );
+            const activeElement = document.activeElement as HTMLElement;
+            const currentIndex = items.findIndex(item => item === activeElement);
+            if (currentIndex !== -1) {
+                const option = options[currentIndex];
+                const firstEmpty = assigned.findIndex((a) => a === null);
+                if (firstEmpty !== -1 && option) {
+                    const newAssigned = [...assigned];
+                    newAssigned[firstEmpty] = option;
+                    const newOptions = options.filter((o) => o.id !== option.id);
+                    setAssigned(newAssigned);
+                    setOptions(newOptions);
+                    onAnswer(newAssigned.map((opt) => (opt ? opt.text : '')).join(' ').trim());
+                    setTimeout(() => {
+                        sentenceRef.current?.focus();
+                    }, 0);
+                    e.preventDefault();
+                    return;
+                }
+            }
+        }
 
         if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
             return;
@@ -199,12 +249,65 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
         let nextIndex;
         if (e.key === 'ArrowRight') {
             nextIndex = (currentIndex + 1) % items.length;
-        } else { // ArrowLeft
+        } else {
             nextIndex = (currentIndex - 1 + items.length) % items.length;
         }
 
         items[nextIndex]?.focus();
     };
+
+
+    const handleSentenceKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Tab' && !e.shiftKey) {
+
+            const filledSlotsIndexes = assigned
+                .map((slot, index) => (slot ? index : -1))
+                .filter(index => index !== -1);
+
+
+            if (filledSlotsIndexes.length > 0) {
+                e.preventDefault();
+                blankRefs.current[filledSlotsIndexes[0]]?.focus();
+            }
+        }
+    };
+
+
+    const handleBlankKeyDown = (e: React.KeyboardEvent, idx: number) => {
+        if (e.key !== 'Tab') return;
+
+
+        const filledSlotsIndexes = assigned
+            .map((slot, index) => (slot ? index : -1))
+            .filter(index => index !== -1);
+
+
+        const currentPosition = filledSlotsIndexes.indexOf(idx);
+
+        if (!e.shiftKey) {
+            e.preventDefault();
+
+            if (currentPosition < filledSlotsIndexes.length - 1) {
+                const nextSlotIndex = filledSlotsIndexes[currentPosition + 1];
+                blankRefs.current[nextSlotIndex]?.focus();
+            } else {
+
+                optionsContainerRef.current?.focus();
+            }
+        } else {
+            e.preventDefault();
+
+
+            if (currentPosition > 0) {
+                const prevSlotIndex = filledSlotsIndexes[currentPosition - 1];
+                blankRefs.current[prevSlotIndex]?.focus();
+            } else {
+
+                sentenceRef.current?.focus();
+            }
+        }
+    };
+
 
     useEffect(() => {
         if (previousGameIdRef.current !== question.game_id) {
@@ -234,11 +337,19 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
                 setAssigned(Array(blankCount).fill(null));
             }
             previousGameIdRef.current = question.game_id;
+
         }
     }, [question]);
 
-
-    const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 50,
+                tolerance: 10,
+            },
+        })
+    );
     const isCorrect = question.isChecked
         ? assigned.every(
             (opt, i) => opt?.text === question.blanks[i]?.correct_answer
@@ -329,6 +440,8 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
                     isActive={activeId !== null && activeId.startsWith('opt-')}
                     status={status}
                     disabled={question.isChecked}
+                    innerRef={el => blankRefs.current[currentBlankIndex] = el}
+                    onKeyDown={e => handleBlankKeyDown(e, currentBlankIndex)}
                 />
             );
         } else {
@@ -338,9 +451,10 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
 
     return (
         <div className="space-y-6 border rounded-lg shadow p-6 bg-white">
-            <h2 className="text-base font-semibold text-[#1ea5b9] flex items-center gap-2">
+            <h2 tabIndex={0} aria-label="Drag the options to the correct blanks:" className="text-base font-semibold text-[#1ea5b9] flex items-center gap-2">
                 Drag the options to the correct blanks:
             </h2>
+
 
             <DndContext
                 sensors={sensors}
@@ -348,7 +462,13 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
                 onDragEnd={handleDragEnd}
                 onDragStart={handleDragStart}
             >
-                <div className="text-lg text-gray-800 leading-relaxed flex flex-wrap items-center gap-2 mb-4">
+                <div
+                    ref={sentenceRef}
+                    tabIndex={0}
+                    aria-label={getSentenceAriaLabel()}
+                    className="text-lg text-gray-800 leading-relaxed flex flex-wrap items-center gap-2 mb-4 outline-none"
+
+                >
                     {partsRendered}
                     {question.isChecked &&
                         (isCorrect ? (
@@ -358,16 +478,17 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
                         ))}
                 </div>
 
-                <h3 className="text-sm font-medium text-gray-600 mb-2">Options:</h3>
+                <h3 tabIndex={0} aria-label="Options" className="text-sm font-medium text-gray-600 mb-2">Options:</h3>
 
                 <SortableContext
                     items={options.map((o) => o.id)}
                     strategy={horizontalListSortingStrategy}
                 >
-                    <div 
-                        ref={optionsContainerRef} 
+                    <div
+                        ref={optionsContainerRef}
                         onKeyDown={handleOptionsKeyDown}
                         className="flex flex-wrap gap-3 p-4 border rounded bg-gray-50 min-h-[60px]"
+                        tabIndex={0}
                     >
                         {options.map((option) => (
                             <SortableItem

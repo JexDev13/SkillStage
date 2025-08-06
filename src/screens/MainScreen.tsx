@@ -23,6 +23,7 @@ export const MainScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedGrammarTopic, setSelectedGrammarTopic] = useState<GrammarSubtopic | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<Game | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -79,7 +80,7 @@ export const MainScreen: React.FC = () => {
   const renderHomeContent = () => (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8 text-center">
-        <h1 tabIndex={0}  className="text-3xl font-bold text-[#1ea5b9] mb-4">
+        <h1 tabIndex={0} className="text-3xl font-bold text-[#1ea5b9] mb-4">
           Welcome back, {userData?.name || 'Student'}!
         </h1>
         <p tabIndex={0} aria-label="Continue your English learning journey" className="text-gray-600 text-lg">
@@ -231,8 +232,22 @@ export const MainScreen: React.FC = () => {
         onSettingsClick={() => setShowSettings(true)}
       />
 
-      <div className="flex">
-        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+      <button
+        className="fixed z-40 bottom-6 left-6 md:hidden bg-[#1ea5b9] text-white p-3 rounded-full shadow-lg"
+        onClick={() => setIsSidebarOpen(true)}
+        aria-label="Open menu"
+      >
+        ☰
+      </button>
+
+      <div className="flex flex-col md:flex-row">
+        <Sidebar
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          isMobileOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+
         <main className="flex-1 p-8">
           {renderContent()}
         </main>

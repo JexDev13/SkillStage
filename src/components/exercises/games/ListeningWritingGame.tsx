@@ -24,10 +24,19 @@ const ListeningWritingGame: React.FC<ListeningWritingGameProps> = ({
     disabled = false,
 }) => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const feedbackRef = useRef<HTMLDivElement>(null);
     const [userInput, setUserInput] = useState(question.userAnswer || '');
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackRate, setPlaybackRate] = useState(1);
     const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+
+    useEffect(() => {
+        if (question.isChecked && feedbackRef.current) {
+            setTimeout(() => {
+                feedbackRef.current?.focus();
+            }, 0);
+        }
+    }, [question.isChecked]);
 
     const handlePlayAudio = () => {
         if (!audioRef.current) return;
@@ -76,7 +85,7 @@ const ListeningWritingGame: React.FC<ListeningWritingGameProps> = ({
 
     return (
         <div className="space-y-6 text-center">
-            <span className="text-base font-semibold text-[#1ea5b9] block mb-2">
+            <span tabIndex={0} aria-label={question.question} className="text-base font-semibold text-[#1ea5b9] block mb-2">
                 {question.question}
             </span>
 
@@ -135,12 +144,15 @@ const ListeningWritingGame: React.FC<ListeningWritingGameProps> = ({
             />
 
             {question.isChecked && (
-                <div className="text-sm mt-2">
-                    <div className={question.isCorrect ? 'text-green-700' : 'text-red-700'}>
-                        {question.isCorrect ? <Check className="inline w-5 h-5 mr-1" /> : <X className="inline w-5 h-5 mr-1" />}
-                        {question.isCorrect ? 'Correct!' : 'Incorrect. Model answer:'}
-                        {!question.isCorrect && <span className="ml-2 font-medium">{question.model_answer}</span>}
-                    </div>
+                <div
+                    ref={feedbackRef}
+                    tabIndex={0}
+                    aria-label={question.isCorrect ? 'Correct!' : 'Incorrect. Model answer:'}
+                    className={question.isCorrect ? 'text-green-700' : 'text-red-700'}
+                >
+                    {question.isCorrect ? <Check className="inline w-5 h-5 mr-1" /> : <X className="inline w-5 h-5 mr-1" />}
+                    {question.isCorrect ? 'Correct!' : 'Incorrect. Model answer:'}
+                    {!question.isCorrect && <span className="ml-2 font-medium">{question.model_answer}</span>}
                 </div>
             )}
         </div>

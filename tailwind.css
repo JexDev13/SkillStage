@@ -89,3 +89,10 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+@media (hover: none) and (pointer: coarse) {
+  [draggable] {
+    touch-action: none;
+  }
+}
+
